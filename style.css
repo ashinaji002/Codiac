@@ -1,4 +1,4 @@
-:root {
+    :root {
       --bg: #f5efe6;
       --ink: #2f251c;
       --panel: #fbf6ef;
@@ -139,14 +139,8 @@
       overflow: hidden;
       box-shadow: var(--shadow);
     }
-        .output-wrap {
-      display: flex;
-      flex-direction: column;
-      min-height: 220px;
-      flex: 1;
-    }
 
-    .calc-wrap {
+    .output-wrap {
       display: flex;
       flex-direction: column;
       min-height: 220px;
@@ -185,4 +179,160 @@
 
     .btn-primary:active {
       transform: translateY(0);
+    }
+
+    .panel-head {
+      padding: 10px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #5f4b39;
+      border-bottom: 1px solid var(--line);
+      background: #f3e7d8;
+    }
+
+    #output {
+      margin: 0;
+      padding: 14px;
+      flex: 1;
+      overflow: auto;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      background: #fff;
+      color: #312518;
+    }
+
+    .blocklyToolboxDiv {
+      border-right: 1px solid #ddccb8 !important;
+      background: #f8efe4 !important;
+    }
+
+    @media (max-width: 920px) {
+      .studio {
+        grid-template-columns: 1fr;
+      }
+
+      .workspace-wrap {
+        min-height: 400px;
+      }
+
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        height: 52px;
+        padding: 0 12px;
+      }
+
+      .brand {
+        font-size: 1rem;
+      }
+
+      .studio {
+        padding: 6px;
+        gap: 6px;
+      }
+
+      .workspace-wrap {
+        min-height: 350px;
+      }
+
+      #output {
+        font-size: 0.85rem;
+        padding: 12px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .menu {
+        display: none;
+      }
+
+      .topbar {
+        height: 48px;
+        padding: 0 10px;
+      }
+
+      .brand {
+        font-size: 0.95rem;
+      }
+
+      .auth {
+        gap: 10px;
+        font-size: 0.78rem;
+      }
+
+      .studio {
+        padding: 6px;
+        gap: 6px;
+        grid-template-columns: 1fr;
+      }
+
+      .workspace-wrap {
+        min-height: 300px;
+      }
+
+      .output-wrap {
+        min-height: auto;
+        height: auto;
+      }
+
+      .actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        padding: 10px;
+      }
+
+      .btn-primary {
+        width: 100%;
+        min-height: 48px;
+        font-size: 1rem;
+        padding: 12px 16px;
+      }
+
+      #output {
+        font-size: 0.8rem;
+        padding: 10px;
+        line-height: 1.4;
+      }
+
+      .panel-head {
+        font-size: 0.75rem;
+        padding: 8px 10px;
+      }
+
+    }
+
+    @media (max-width: 480px) {
+      .topbar {
+        height: 48px;
+        padding: 0 8px;
+      }
+
+      .brand {
+        font-size: 0.9rem;
+      }
+
+      .studio {
+        padding: 4px;
+        gap: 4px;
+      }
+
+      .workspace-wrap {
+        min-height: 280px;
+      }
+
+      .actions {
+        padding: 8px;
+      }
+
+    }
+
+    @media (max-width: 640px) and (orientation: landscape) {
+      .workspace-wrap {
+        min-height: 280px;
+      }
     }
