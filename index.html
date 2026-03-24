@@ -12,9 +12,51 @@
 </head>
 <body>
   <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">Codiac</div>
-      <div class="auth">
+    <header class="app-header">
+      <div class="menu-row">
+        <div class="menu-left" aria-label="Main">
+          <div class="menu-item">
+            <button id="fileMenuBtn" class="menu-link menu-trigger" type="button">File</button>
+            <div id="fileMenu" class="menu-dropdown" role="menu" aria-label="File">
+              <button id="saveCBtn" class="menu-action" type="button" role="menuitem">Save</button>
+            </div>
+          </div>
+          <button class="menu-link" type="button">Edit</button>
+          <button class="menu-link" type="button">Sketch</button>
+          <button class="menu-link" type="button">Tools</button>
+          <button class="menu-link" type="button">Help</button>
+        </div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-left">
+          <button class="tool-btn tool-btn-primary" type="button" title="Verify">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path d="M6.2 11.6 2.7 8.1l1.2-1.2 2.3 2.3 5-5 1.2 1.2-6.2 6.2z" />
+            </svg>
+          </button>
+          <button class="tool-btn" type="button" title="Upload">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path d="M8 2.5 12 6.5h-2.5V12h-3V6.5H4L8 2.5z" />
+            </svg>
+          </button>
+          <button class="tool-btn" type="button" title="Debug">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path d="M8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6z" />
+            </svg>
+          </button>
+        </div>
+        <div class="tool-right">
+          <button class="tool-icon" type="button" title="Monitor">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path d="M2 3h12v10H2zM4 6h4v2H4z" />
+            </svg>
+          </button>
+          <button class="tool-icon" type="button" title="Plotter">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path d="M2 12h12v1H2zM3 10l3-3 2 2 4-5 1 1-5 6-2-2-3 3z" />
+            </svg>
+          </button>
+        </div>
       </div>
     </header>
 

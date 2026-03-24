@@ -15,7 +15,10 @@ const els = {
   hexB: document.getElementById('hexB'),
   hexOp: document.getElementById('hexOp'),
   calcResult: document.getElementById('calcResult'),
-  numpadButtons: document.querySelectorAll('.numpad-btn')
+  numpadButtons: document.querySelectorAll('.numpad-btn'),
+  fileMenuBtn: document.getElementById('fileMenuBtn'),
+  fileMenu: document.getElementById('fileMenu'),
+  saveCBtn: document.getElementById('saveCBtn')
 };
 
 //Creates work Area
@@ -47,8 +50,81 @@ window.onload = function() {
   };
 
   initCalculator();
+  initFileMenu();
 
 };
+
+function initFileMenu() {
+  if (!els.fileMenuBtn || !els.fileMenu) {
+    return;
+  }
+
+  function toggleMenu() {
+    els.fileMenu.classList.toggle('open');
+  }
+
+  function closeMenu() {
+    els.fileMenu.classList.remove('open');
+  }
+
+  els.fileMenuBtn.addEventListener('click', function (event) {
+    event.stopPropagation();
+    toggleMenu();
+  });
+
+  document.addEventListener('click', function (event) {
+    if (!els.fileMenu.contains(event.target) && event.target !== els.fileMenuBtn) {
+      closeMenu();
+    }
+  });
+
+  if (els.saveCBtn) {
+    els.saveCBtn.addEventListener('click', function () {
+      saveGeneratedCode('codiac-output.c');
+      closeMenu();
+    });
+  }
+}
+
+function saveGeneratedCode(filename) {
+  const code = getOrBuildGeneratedCode();
+  if (!code) {
+    return;
+  }
+  triggerDownload(code, filename);
+}
+
+function getOrBuildGeneratedCode() {
+  const current = String(els.output ? els.output.textContent : '').trim();
+  if (current && current !== 'Click "Generate C Code" to see output.') {
+    return current;
+  }
+
+  try {
+    const generated = buildCProgram();
+    if (els.output) {
+      els.output.textContent = generated;
+    }
+    return generated;
+  } catch (error) {
+    if (els.output) {
+      els.output.textContent = 'Error: ' + error.message;
+    }
+    return '';
+  }
+}
+
+function triggerDownload(content, filename) {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 function initCalculator() {
   if (!els.calcCircleBtn || !els.calcModal || !els.calcModalContainer) {
@@ -336,7 +412,10 @@ Blockly.Blocks['assign_register_hex'] = {
         ['5.5', 'P5_5']
       ]), 'TARGET')
       .appendField('=')
-      .appendField(new Blockly.FieldTextInput('1'), 'VALUE');
+      .appendField(new Blockly.FieldDropdown([
+        ['output', 'OUTPUT'],
+        ['input', 'INPUT']
+      ]), 'MODE');
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(40);
@@ -415,9 +494,20 @@ generator.forBlock['initialize_8052'] = function() {
 };
 
 generator.forBlock['assign_register_hex'] = function(block) {
-  const target = sanitizeIdentifier(block.getFieldValue('TARGET'), 'TEMP_REG');
-  const value = normalizeHexValue(block.getFieldValue('VALUE'), '0x00');
-  return target + ' = ' + value + ';\n';
+  const target = String(block.getFieldValue('TARGET') || '').trim();
+  const mode = block.getFieldValue('MODE') === 'INPUT' ? 'INPUT' : 'OUTPUT';
+  const pinInfo = parsePinTarget(target);
+  if (!pinInfo) {
+    return '';
+  }
+
+  const maskHex = toHexByte(1 << pinInfo.bit);
+  const zeroHex = '0x00';
+  const m1Value = mode === 'INPUT' ? maskHex : zeroHex;
+  const m0Value = mode === 'OUTPUT' ? maskHex : zeroHex;
+
+  return pinInfo.port + 'M1 = ' + pinInfo.port + 'M1 | ' + m1Value + ';\n' +
+    pinInfo.port + 'M0 = ' + pinInfo.port + 'M0 | ' + m0Value + ';\n';
 };
 
 generator.forBlock['assign_bit_value'] = function(block) {
@@ -464,4 +554,20 @@ function normalizeHexValue(value, fallback) {
     return raw;
   }
   return fallback;
+}
+
+function parsePinTarget(target) {
+  const match = /^P(\d)_([0-7])$/.exec(String(target || '').trim());
+  if (!match) {
+    return null;
+  }
+  return {
+    port: 'P' + match[1],
+    bit: Number(match[2])
+  };
+}
+
+function toHexByte(value) {
+  const normalized = (Number(value) >>> 0) & 0xff;
+  return '0x' + normalized.toString(16).toUpperCase().padStart(2, '0');
 }
