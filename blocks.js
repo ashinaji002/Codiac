@@ -4,7 +4,18 @@ generator.ORDER_ATOMIC = 0;
 let workspace;
 const els = {
   generateBtn: document.getElementById('generateBtn'),
-  output: document.getElementById('output')
+  copyBtn: document.getElementById('copyBtn'),
+  output: document.getElementById('output'),
+  calcCircleBtn: document.getElementById('calcCircleBtn'),
+  calcModal: document.getElementById('calcModal'),
+  calcModalContainer: document.querySelector('.modal-container'),
+  calcModalClose: document.getElementById('calcModalClose'),
+  calcBtn: document.getElementById('calcBtn'),
+  hexA: document.getElementById('hexA'),
+  hexB: document.getElementById('hexB'),
+  hexOp: document.getElementById('hexOp'),
+  calcResult: document.getElementById('calcResult'),
+  numpadButtons: document.querySelectorAll('.numpad-btn')
 };
 
 //Creates work Area
@@ -24,7 +35,178 @@ window.onload = function() {
     }
   };
 
+  els.copyBtn.onclick = async function () {
+    const code = String(els.output.textContent || '').trim();
+    if (!code || code === 'Click "Generate C Code" to see output.') {
+      setCopyButtonLabel('Generate First');
+      return;
+    }
+
+    const copied = await copyTextToClipboard(code);
+    setCopyButtonLabel(copied ? 'Copied!' : 'Copy Failed');
+  };
+
+  initCalculator();
+
 };
+
+function initCalculator() {
+  if (!els.calcCircleBtn || !els.calcModal || !els.calcModalContainer) {
+    return;
+  }
+
+  let activeHexInput = els.hexA;
+
+  function openCalculator() {
+    els.calcModal.classList.add('active');
+    els.calcModalContainer.classList.add('active');
+  }
+
+  function closeCalculator() {
+    els.calcModal.classList.remove('active');
+    els.calcModalContainer.classList.remove('active');
+  }
+
+  if (els.hexA) {
+    els.hexA.addEventListener('focus', function () { activeHexInput = els.hexA; });
+  }
+  if (els.hexB) {
+    els.hexB.addEventListener('focus', function () { activeHexInput = els.hexB; });
+  }
+
+  els.calcCircleBtn.addEventListener('click', openCalculator);
+
+  if (els.calcModalClose) {
+    els.calcModalClose.addEventListener('click', closeCalculator);
+  }
+
+  els.calcModal.addEventListener('click', function (event) {
+    if (event.target === els.calcModal) {
+      closeCalculator();
+    }
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && els.calcModal.classList.contains('active')) {
+      closeCalculator();
+    }
+  });
+
+  if (els.calcBtn) {
+    els.calcBtn.addEventListener('click', runHexCalculation);
+  }
+
+  if (els.numpadButtons && els.numpadButtons.length) {
+    els.numpadButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (!activeHexInput) {
+          return;
+        }
+
+        const action = btn.getAttribute('data-action');
+        const value = btn.getAttribute('data-value');
+
+        if (action === 'backspace') {
+          activeHexInput.value = activeHexInput.value.slice(0, -1);
+          return;
+        }
+
+        if (action === 'clear') {
+          activeHexInput.value = '';
+          return;
+        }
+
+        if (value) {
+          activeHexInput.value += value;
+        }
+      });
+    });
+  }
+}
+
+function runHexCalculation() {
+  if (!els.hexA || !els.hexB || !els.hexOp || !els.calcResult) {
+    return;
+  }
+
+  const a = parseHexInput(els.hexA.value);
+  const b = parseHexInput(els.hexB.value);
+
+  if (a === null || b === null) {
+    els.calcResult.textContent = 'Result: Invalid hex input';
+    return;
+  }
+
+  const result = els.hexOp.value === 'AND' ? (a & b) : (a | b);
+  const operator = els.hexOp.value === 'AND' ? '&' : '|';
+
+  els.calcResult.textContent =
+    'Result: 0x' + formatHex(result) + '\n' +
+    '0x' + formatHex(a) + ' ' + operator + ' 0x' + formatHex(b) + ' = 0x' + formatHex(result);
+}
+
+function parseHexInput(value) {
+  const cleaned = String(value || '')
+    .trim()
+    .replace(/^0x/i, '')
+    .replace(/[^0-9a-fA-F]/g, '');
+
+  if (!cleaned) {
+    return null;
+  }
+
+  const parsed = parseInt(cleaned, 16);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function formatHex(value) {
+  return Number(value >>> 0).toString(16).toUpperCase();
+}
+
+let copyLabelTimer = null;
+
+function setCopyButtonLabel(label) {
+  if (!els.copyBtn) {
+    return;
+  }
+  els.copyBtn.textContent = label;
+  if (copyLabelTimer !== null) {
+    clearTimeout(copyLabelTimer);
+  }
+  copyLabelTimer = setTimeout(function () {
+    els.copyBtn.textContent = 'Copy Code';
+    copyLabelTimer = null;
+  }, 1200);
+}
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.setAttribute('readonly', '');
+  textArea.style.position = 'absolute';
+  textArea.style.left = '-9999px';
+  document.body.appendChild(textArea);
+  textArea.select();
+
+  let success = false;
+  try {
+    success = document.execCommand('copy');
+  } catch (error) {
+    success = false;
+  }
+
+  document.body.removeChild(textArea);
+  return success;
+}
 
 let resizeFrameId = null;
 
@@ -146,10 +328,15 @@ Blockly.Blocks['initialize_8052'] = {
 Blockly.Blocks['assign_register_hex'] = {
   init: function () {
     this.appendDummyInput()
-      .appendField('set')
-      .appendField(new Blockly.FieldTextInput('P3M0'), 'TARGET')
+      .appendField('set pin')
+      .appendField(new Blockly.FieldDropdown([
+        ['3.2', 'P3_2'],
+        ['3.3', 'P3_3'],
+        ['5.4', 'P5_4'],
+        ['5.5', 'P5_5']
+      ]), 'TARGET')
       .appendField('=')
-      .appendField(new Blockly.FieldTextInput('0x0C'), 'VALUE');
+      .appendField(new Blockly.FieldTextInput('1'), 'VALUE');
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(40);
@@ -221,6 +408,8 @@ generator.forBlock['initialize_8052'] = function() {
     '__sfr __at (0xCA) P5M0;\n' +
     '__sfr __at (0xC9) P5M1;\n' +
     '//set values of output port register\n' +
+    '__sbit __at (0xB2) P3_2;\n' +
+    '__sbit __at (0xB3) P3_3;\n' +
     '__sbit __at (0xCC) P5_4;\n' +
     '__sbit __at (0xCD) P5_5;\n';
 };
