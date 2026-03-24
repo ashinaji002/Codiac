@@ -18,15 +18,26 @@
           <div class="menu-item">
             <button id="fileMenuBtn" class="menu-link menu-trigger" type="button">File</button>
             <div id="fileMenu" class="menu-dropdown" role="menu" aria-label="File">
+                <button id="newWorkspaceBtn" class="menu-action" type="button" role="menuitem">New</button>
                 <button id="openXmlBtn" class="menu-action" type="button" role="menuitem">Open</button>
                 <button id="saveCBtn" class="menu-action" type="button" role="menuitem">Save As</button>
             </div>
           </div>
           <input id="openXmlInput" type="file" accept=".xml" hidden />
-          <button class="menu-link" type="button">Edit</button>
-          <button class="menu-link" type="button">Sketch</button>
-          <button class="menu-link" type="button">Tools</button>
-          <button class="menu-link" type="button">Help</button>
+          <div class="menu-item">
+            <button id="editMenuBtn" class="menu-link menu-trigger" type="button">Edit</button>
+            <div id="editMenu" class="menu-dropdown" role="menu" aria-label="Edit">
+              <button id="undoBtn" class="menu-action" type="button" role="menuitem">
+                <span>Undo</span>
+                <span class="menu-shortcut">Ctrl+Z</span>
+              </button>
+              <button id="redoBtn" class="menu-action" type="button" role="menuitem">
+                <span>Redo</span>
+                <span class="menu-shortcut">Ctrl+Y</span>
+              </button>
+            </div>
+          </div>
+          <button id="helpBtn" class="menu-link" type="button">Help</button>
         </div>
       </div>
       <div class="tool-row">
@@ -137,6 +148,25 @@
         </div>
         <button id="calcBtn" class="btn-primary">Calculate</button>
         <pre id="calcResult" class="calc-result">Result: 0x3C</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div id="helpModal" class="modal-overlay">
+    <div id="helpModalContainer" class="modal-container help-modal">
+      <div class="modal-header">
+        <div class="modal-title">Microprocessor Programming IDE</div>
+        <button id="helpModalClose" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body help-body">
+        <div class="help-line"><strong>Microprocessor Programming IDE</strong></div>
+        <div class="help-line">Version: 1.1.1</div>
+        <div class="help-line">Copyright @codiac</div>
+      </div>
+      <div class="modal-footer">
+        <button id="helpOkBtn" class="btn-secondary" type="button">OK</button>
+        <button id="helpCopyBtn" class="btn-primary" type="button">Copy</button>
       </div>
     </div>
   </div>

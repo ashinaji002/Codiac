@@ -2,6 +2,7 @@
 const generator = new Blockly.Generator('C');
 generator.ORDER_ATOMIC = 0;
 let workspace;
+let workspaceDirty = false;
 const els = {
   generateBtn: document.getElementById('generateBtn'),
   copyBtn: document.getElementById('copyBtn'),
@@ -20,13 +21,30 @@ const els = {
   fileMenu: document.getElementById('fileMenu'),
   saveCBtn: document.getElementById('saveCBtn'),
   openXmlBtn: document.getElementById('openXmlBtn'),
-  openXmlInput: document.getElementById('openXmlInput')
+  openXmlInput: document.getElementById('openXmlInput'),
+  newWorkspaceBtn: document.getElementById('newWorkspaceBtn'),
+  editMenuBtn: document.getElementById('editMenuBtn'),
+  editMenu: document.getElementById('editMenu'),
+  undoBtn: document.getElementById('undoBtn'),
+  redoBtn: document.getElementById('redoBtn'),
+  helpBtn: document.getElementById('helpBtn'),
+  helpModal: document.getElementById('helpModal'),
+  helpModalContainer: document.getElementById('helpModalContainer'),
+  helpModalClose: document.getElementById('helpModalClose'),
+  helpOkBtn: document.getElementById('helpOkBtn'),
+  helpCopyBtn: document.getElementById('helpCopyBtn')
 };
 
 //Creates work Area
 window.onload = function() {
   workspace = Blockly.inject('blocklyDiv', {
     toolbox: document.getElementById('toolbox')
+  });
+  workspace.addChangeListener(function (event) {
+    if (!event || event.isUiEvent) {
+      return;
+    }
+    workspaceDirty = true;
   });
   window.addEventListener('resize', scheduleWorkspaceResize);
 
@@ -53,6 +71,8 @@ window.onload = function() {
 
   initCalculator();
   initFileMenu();
+  initEditMenu();
+  initHelpModal();
 
 };
 
@@ -87,11 +107,28 @@ function initFileMenu() {
     });
   }
 
+  if (els.newWorkspaceBtn) {
+    els.newWorkspaceBtn.addEventListener('click', function () {
+      if (confirmDiscardIfNeeded()) {
+        if (workspace) {
+          workspace.clear();
+        }
+        if (els.output) {
+          els.output.textContent = 'Click "Generate C Code" to see output.';
+        }
+        workspaceDirty = false;
+        closeMenu();
+      }
+    });
+  }
+
   if (els.openXmlBtn && els.openXmlInput) {
     els.openXmlBtn.addEventListener('click', function () {
-      els.openXmlInput.value = '';
-      els.openXmlInput.click();
-      closeMenu();
+      if (confirmDiscardIfNeeded()) {
+        els.openXmlInput.value = '';
+        els.openXmlInput.click();
+        closeMenu();
+      }
     });
 
     els.openXmlInput.addEventListener('change', function (event) {
@@ -100,6 +137,94 @@ function initFileMenu() {
         return;
       }
       loadWorkspaceXml(file);
+    });
+  }
+}
+
+function initHelpModal() {
+  if (!els.helpBtn || !els.helpModal || !els.helpModalContainer) {
+    return;
+  }
+
+  function openHelp() {
+    els.helpModal.classList.add('active');
+    els.helpModalContainer.classList.add('active');
+  }
+
+  function closeHelp() {
+    els.helpModal.classList.remove('active');
+    els.helpModalContainer.classList.remove('active');
+  }
+
+  els.helpBtn.addEventListener('click', openHelp);
+
+  if (els.helpModalClose) {
+    els.helpModalClose.addEventListener('click', closeHelp);
+  }
+
+  if (els.helpOkBtn) {
+    els.helpOkBtn.addEventListener('click', closeHelp);
+  }
+
+  if (els.helpCopyBtn) {
+    els.helpCopyBtn.addEventListener('click', function () {
+      const text = 'Microprocessor Programming IDE\nVersion: 1.1.1\nCopyright @codiac';
+      copyTextToClipboard(text);
+    });
+  }
+
+  els.helpModal.addEventListener('click', function (event) {
+    if (event.target === els.helpModal) {
+      closeHelp();
+    }
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && els.helpModal.classList.contains('active')) {
+      closeHelp();
+    }
+  });
+}
+
+function initEditMenu() {
+  if (!els.editMenuBtn || !els.editMenu) {
+    return;
+  }
+
+  function toggleMenu() {
+    els.editMenu.classList.toggle('open');
+  }
+
+  function closeMenu() {
+    els.editMenu.classList.remove('open');
+  }
+
+  els.editMenuBtn.addEventListener('click', function (event) {
+    event.stopPropagation();
+    toggleMenu();
+  });
+
+  document.addEventListener('click', function (event) {
+    if (!els.editMenu.contains(event.target) && event.target !== els.editMenuBtn) {
+      closeMenu();
+    }
+  });
+
+  if (els.undoBtn) {
+    els.undoBtn.addEventListener('click', function () {
+      if (workspace) {
+        workspace.undo(false);
+      }
+      closeMenu();
+    });
+  }
+
+  if (els.redoBtn) {
+    els.redoBtn.addEventListener('click', function () {
+      if (workspace) {
+        workspace.undo(true);
+      }
+      closeMenu();
     });
   }
 }
@@ -124,6 +249,7 @@ function saveWorkspaceXml(filename) {
       accept: { 'text/xml': ['.xml'] }
     }
   ]);
+  workspaceDirty = false;
 }
 
 function loadWorkspaceXml(file) {
@@ -142,6 +268,7 @@ function loadWorkspaceXml(file) {
       }
       workspace.clear();
       Blockly.Xml.domToWorkspace(xmlDom, workspace);
+      workspaceDirty = false;
     } catch (error) {
       if (els.output) {
         els.output.textContent = 'Error: Unable to load workspace XML.';
@@ -149,6 +276,13 @@ function loadWorkspaceXml(file) {
     }
   };
   reader.readAsText(file);
+}
+
+function confirmDiscardIfNeeded() {
+  if (!workspaceDirty) {
+    return true;
+  }
+  return confirm('You have unsaved changes. Discard them?');
 }
 
 function getOrBuildGeneratedCode() {
