@@ -1,0 +1,141 @@
+:root {
+      --bg: #f5efe6;
+      --ink: #2f251c;
+      --panel: #fbf6ef;
+      --topbar-a: #b88758;
+      --topbar-b: #a47245;
+      --topbar-ink: #fff8ef;
+      --line: #d9c6b3;
+      --card: #fffaf4;
+      --accent: #b5743e;
+      --accent-strong: #925629;
+      --shadow: 0 10px 24px rgba(66, 45, 27, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Space Grotesk', sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at 90% 10%, #e8d3bc 0 10%, transparent 11%), var(--bg);
+      -webkit-font-smoothing: antialiased;
+      -webkit-touch-callout: none;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 56px;
+      background: linear-gradient(90deg, var(--topbar-a), var(--topbar-b));
+      color: var(--topbar-ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      box-shadow: 0 2px 0 rgba(255, 255, 255, 0.08) inset;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      font-size: 1.05rem;
+    }
+
+    .menu {
+      display: flex;
+      gap: 18px;
+      font-size: 0.9rem;
+      opacity: 0.95;
+    }
+
+    .menu span,
+    .auth span {
+      white-space: nowrap;
+    }
+
+    .auth {
+      display: flex;
+      gap: 14px;
+      font-size: 0.86rem;
+      opacity: 0.95;
+    }
+
+    .studio {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 2fr 0.95fr;
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .editor-pane,
+    .right-pane {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .right-pane {
+      height: 100%;
+    }
+
+    .editor-pane {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .editor-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 8px;
+      border-bottom: 1px solid var(--line);
+      background: #efe3d4;
+    }
+
+    .tab {
+      border: 1px solid #dcc6ad;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #6f533a;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .tab.active {
+      background: #f4e3cf;
+      border-color: #cfae8b;
+      color: #6f4523;
+    }
+
+    .workspace-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 560px;
+    }
+
+    #blocklyDiv {
+      height: 100%;
+      width: 100%;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
