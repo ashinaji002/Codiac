@@ -28,6 +28,7 @@ const els = {
   editMenu: document.getElementById('editMenu'),
   undoBtn: document.getElementById('undoBtn'),
   redoBtn: document.getElementById('redoBtn'),
+  sampleBtn: document.getElementById('sampleBtn'),
   helpBtn: document.getElementById('helpBtn'),
   helpModal: document.getElementById('helpModal'),
   helpModalContainer: document.getElementById('helpModalContainer'),
@@ -332,6 +333,50 @@ function initEditMenu() {
       closeMenu();
     });
   }
+
+  if (els.sampleBtn) {
+    els.sampleBtn.addEventListener('click', function () {
+      if (confirmDiscardIfNeeded()) {
+        createSampleProgram();
+      }
+      closeMenu();
+    });
+  }
+}
+
+function createSampleProgram() {
+  if (!workspace || !Blockly) {
+    return;
+  }
+
+  workspace.clear();
+
+  const startBlock = workspace.newBlock('start_block');
+  const includeBlock = workspace.newBlock('include_library');
+  const initBlock = workspace.newBlock('initialize_8052');
+
+  startBlock.initSvg();
+  includeBlock.initSvg();
+  initBlock.initSvg();
+
+  startBlock.moveBy(40, 40);
+  includeBlock.moveBy(40, 110);
+  initBlock.moveBy(40, 180);
+
+  if (startBlock.nextConnection && includeBlock.previousConnection) {
+    startBlock.nextConnection.connect(includeBlock.previousConnection);
+  }
+
+  if (includeBlock.nextConnection && initBlock.previousConnection) {
+    includeBlock.nextConnection.connect(initBlock.previousConnection);
+  }
+
+  startBlock.render();
+  includeBlock.render();
+  initBlock.render();
+
+  workspaceDirty = true;
+  scheduleWorkspaceResize();
 }
 
 function saveGeneratedCode(filename) {
@@ -627,10 +672,11 @@ function buildCProgram() {
   const includes = new Set();
   const declarations = [];
   const statements = [];
+  const portModes = {};
   const topBlocks = workspace.getTopBlocks(true);
 
   for (let i = 0; i < topBlocks.length; i++) {
-    collectCodeFromChain(topBlocks[i], includes, declarations, statements);
+    collectCodeFromChain(topBlocks[i], includes, declarations, statements, portModes);
   }
 
   if (includes.size === 0) {
@@ -639,15 +685,17 @@ function buildCProgram() {
 
   const includeSection = Array.from(includes).join('');
   const declarationSection = declarations.length ? declarations.join('') + '\n' : '';
-  const statementSection = statements.length ? indentCodeLines(statements.join('')) : '';
+  const modeStatements = buildPortModeStatements(portModes);
+  const allStatements = modeStatements.concat(statements);
+  const statementSection = allStatements.length ? indentCodeLines(allStatements.join('')) : '';
 
   return `${includeSection}
 ${declarationSection}void main(void) {
 ${statementSection}}`;
 }
-function collectCodeFromChain(block, includes, declarations, statements) {
+function collectCodeFromChain(block, includes, declarations, statements, portModes) {
   const declarationTypes = new Set(['initialize_8052']);
-  const statementTypes = new Set(['assign_register_hex', 'assign_bit_value', 'while_forever', 'print_text']);
+  const statementTypes = new Set(['assign_bit_value', 'while_forever', 'print_text']);
   let current = block;
 
   while (current) {
@@ -656,6 +704,22 @@ function collectCodeFromChain(block, includes, declarations, statements) {
       const code = generateBlockCode(current);
       if (code) {
         includes.add(code);
+      }
+    } else if (type === 'assign_register_hex') {
+      const target = String(current.getFieldValue('TARGET') || '').trim();
+      const mode = current.getFieldValue('MODE') === 'INPUT' ? 'INPUT' : 'OUTPUT';
+      const pinInfo = parsePinTarget(target);
+      if (pinInfo) {
+        const portKey = pinInfo.port;
+        if (!portModes[portKey]) {
+          portModes[portKey] = { m0: 0, m1: 0 };
+        }
+        const bitMask = 1 << pinInfo.bit;
+        if (mode === 'INPUT') {
+          portModes[portKey].m1 |= bitMask;
+        } else {
+          portModes[portKey].m0 |= bitMask;
+        }
       }
     } else if (declarationTypes.has(type)) {
       const code = generateBlockCode(current);
@@ -670,6 +734,23 @@ function collectCodeFromChain(block, includes, declarations, statements) {
     }
     current = current.getNextBlock();
   }
+}
+
+function buildPortModeStatements(portModes) {
+  const statements = [];
+  const ports = Object.keys(portModes).sort();
+  for (let i = 0; i < ports.length; i++) {
+    const port = ports[i];
+    const modes = portModes[port];
+    if (!modes) {
+      continue;
+    }
+    const m1Value = toHexByte(modes.m1 || 0);
+    const m0Value = toHexByte(modes.m0 || 0);
+    statements.push(port + 'M1 = ' + m1Value + ';\n');
+    statements.push(port + 'M0 = ' + m0Value + ';\n');
+  }
+  return statements;
 }
 
 function generateBlockCode(block) {
@@ -818,20 +899,7 @@ generator.forBlock['initialize_8052'] = function() {
 };
 
 generator.forBlock['assign_register_hex'] = function(block) {
-  const target = String(block.getFieldValue('TARGET') || '').trim();
-  const mode = block.getFieldValue('MODE') === 'INPUT' ? 'INPUT' : 'OUTPUT';
-  const pinInfo = parsePinTarget(target);
-  if (!pinInfo) {
-    return '';
-  }
-
-  const maskHex = toHexByte(1 << pinInfo.bit);
-  const zeroHex = '0x00';
-  const m1Value = mode === 'INPUT' ? maskHex : zeroHex;
-  const m0Value = mode === 'OUTPUT' ? maskHex : zeroHex;
-
-  return pinInfo.port + 'M1 = ' + pinInfo.port + 'M1 | ' + m1Value + ';\n' +
-    pinInfo.port + 'M0 = ' + pinInfo.port + 'M0 | ' + m0Value + ';\n';
+  return '';
 };
 
 generator.forBlock['assign_bit_value'] = function(block) {
