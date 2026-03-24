@@ -17,7 +17,11 @@
       <div class="auth">
       </div>
     </header>
-  <main class="studio">
+
+    <!-- Calculator Circle Button -->
+    <button id="calcCircleBtn" class="calc-button" title="Open Calculator">🧮</button>
+
+    <main class="studio">
       <section class="editor-pane">
         <div class="editor-tabs">
         </div>
@@ -37,7 +41,62 @@
       </aside>
     </main>
   </div>
-<!-- Blockly Toolbox -->
+
+  <!-- Calculator Modal -->
+  <div id="calcModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Hexadecimal Calculator</div>
+        <button id="calcModalClose" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="calc-grid">
+          <div class="field">
+            <label for="hexA">Value A</label>
+            <input id="hexA" type="text" value="0x0C" placeholder="0x0C" />
+          </div>
+          <div class="field">
+            <label for="hexB">Value B</label>
+            <input id="hexB" type="text" value="0x30" placeholder="0x30" />
+          </div>
+        </div>
+        
+        <!-- Shared Number Pad -->
+        <div class="numberpad">
+          <button type="button" class="numpad-btn" data-value="1">1</button>
+          <button type="button" class="numpad-btn" data-value="2">2</button>
+          <button type="button" class="numpad-btn" data-value="3">3</button>
+          <button type="button" class="numpad-btn del" data-action="backspace">DEL</button>
+          <button type="button" class="numpad-btn" data-value="4">4</button>
+          <button type="button" class="numpad-btn" data-value="5">5</button>
+          <button type="button" class="numpad-btn" data-value="6">6</button>
+          <button type="button" class="numpad-btn" data-value="7">7</button>
+          <button type="button" class="numpad-btn" data-value="8">8</button>
+          <button type="button" class="numpad-btn" data-value="9">9</button>
+          <button type="button" class="numpad-btn" data-value="0">0</button>
+          <button type="button" class="numpad-btn" data-value="A">A</button>
+          <button type="button" class="numpad-btn" data-value="B">B</button>
+          <button type="button" class="numpad-btn" data-value="C">C</button>
+          <button type="button" class="numpad-btn" data-value="D">D</button>
+          <button type="button" class="numpad-btn" data-value="E">E</button>
+          <button type="button" class="numpad-btn" data-value="F">F</button>
+          <button type="button" class="numpad-btn clear wide" data-action="clear">CLEAR</button>
+        </div>
+        
+        <div class="field">
+          <label for="hexOp">Operation</label>
+          <select id="hexOp">
+            <option value="OR">OR (|)</option>
+            <option value="AND">AND (&)</option>
+          </select>
+        </div>
+        <button id="calcBtn" class="btn-primary">Calculate</button>
+        <pre id="calcResult" class="calc-result">Result: 0x3C</pre>
+      </div>
+    </div>
+    </main>
+  </div>
+
   <xml id="toolbox" style="display: none">
     <block type="start_block"></block>
     <block type="include_library"></block>
@@ -48,6 +107,7 @@
     <block type="print_text"></block>
     <block type="text_input"></block>
   </xml>
+
 <script src="blocks.js"></script>
 </body>
 </html>

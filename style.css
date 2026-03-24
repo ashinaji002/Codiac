@@ -147,6 +147,13 @@
       flex: 1;
     }
 
+    .calc-wrap {
+      display: flex;
+      flex-direction: column;
+      min-height: 220px;
+      flex: 1;
+    }
+
     .actions {
       padding: 12px;
       border-bottom: 1px solid var(--line);
@@ -204,6 +211,63 @@
       color: #312518;
     }
 
+    .calc-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #fffdf9;
+      flex: 1;
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #6e5a47;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .field input,
+    .field select {
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.95rem;
+      color: #3a2d21;
+      background: #fff;
+      -webkit-appearance: none;
+      appearance: none;
+      touch-action: manipulation;
+    }
+
+    .calc-result {
+      margin: 0;
+      border: 1px dashed #ccb39a;
+      background: #fff7ed;
+      border-radius: 8px;
+      padding: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.84rem;
+      line-height: 1.45;
+      color: #4a3422;
+      white-space: pre-wrap;
+    }
+
     .blocklyToolboxDiv {
       border-right: 1px solid #ddccb8 !important;
       background: #f8efe4 !important;
@@ -218,6 +282,13 @@
         min-height: 400px;
       }
 
+      .calc-button {
+        bottom: 20px;
+        right: 20px;
+        width: 64px;
+        height: 64px;
+        font-size: 28px;
+      }
     }
 
     @media (max-width: 768px) {
@@ -239,9 +310,26 @@
         min-height: 350px;
       }
 
+      .field label {
+        font-size: 0.8rem;
+      }
+
       #output {
         font-size: 0.85rem;
         padding: 12px;
+      }
+
+      .calc-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-container {
+        max-width: 90vw;
+      }
+
+      .numbadpad {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
       }
     }
 
@@ -304,6 +392,70 @@
         padding: 8px 10px;
       }
 
+      .calc-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .calc-button {
+        bottom: 16px;
+        right: 16px;
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+      }
+
+      .modal-container {
+        width: 95vw;
+        max-width: 95vw;
+        max-height: 85vh;
+      }
+
+      .modal-header {
+        padding: 12px 14px;
+      }
+
+      .modal-title {
+        font-size: 0.85rem;
+      }
+
+      .modal-body {
+        padding: 12px 14px;
+        gap: 10px;
+      }
+
+      .field input,
+      .field select {
+        height: 48px;
+        font-size: 1rem;
+        padding: 0 12px;
+      }
+
+      .field label {
+        font-size: 0.75rem;
+      }
+
+      .numberpad {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        margin-top: 6px;
+      }
+
+      .numpad-btn {
+        min-height: 48px;
+        font-size: 1rem;
+        padding: 8px 6px;
+      }
+
+      .numpad-btn.wide {
+        grid-column: span 3;
+      }
+
+      .calc-result {
+        font-size: 0.8rem;
+        padding: 10px;
+        line-height: 1.4;
+      }
     }
 
     @media (max-width: 480px) {
@@ -329,10 +481,281 @@
         padding: 8px;
       }
 
+      .calc-button {
+        width: 52px;
+        height: 52px;
+        font-size: 22px;
+        bottom: 12px;
+        right: 12px;
+      }
+
+      .numberpad {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 3px;
+      }
+
+      .numpad-btn {
+        min-height: 44px;
+        font-size: 0.95rem;
+        padding: 6px 4px;
+      }
+
+      .field input,
+      .field select {
+        height: 44px;
+        font-size: 16px;
+      }
+
+      .modal-container {
+        max-height: 80vh;
+      }
     }
 
     @media (max-width: 640px) and (orientation: landscape) {
       .workspace-wrap {
         min-height: 280px;
+      }
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Calculator Circle Button */
+    .calc-button {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: white;
+      font-size: 32px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(147, 86, 41, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      z-index: 999;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .calc-button:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 16px rgba(147, 86, 41, 0.5);
+    }
+
+    .calc-button:active,
+    .calc-button:focus {
+      transform: scale(0.95);
+      outline: 2px solid rgba(255, 255, 255, 0.5);
+      outline-offset: 2px;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      animation: fadeIn 150ms ease;
+    }
+
+    .modal-overlay.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Modal Container */
+    .modal-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      width: 90%;
+      max-width: 420px;
+      max-height: 90vh;
+      z-index: 1001;
+      display: none;
+      flex-direction: column;
+      animation: slideUp 200ms ease;
+      overflow-y: auto;
+    }
+
+    .modal-container.active {
+      display: flex;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      background: #f6e9db;
+    }
+
+    .modal-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.03em;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--ink);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 8px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: background 120ms ease;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .modal-close:hover {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .modal-close:active,
+    .modal-close:focus {
+      background: rgba(0, 0, 0, 0.12);
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .modal-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .numberpad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .numpad-btn {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffaf4;
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 12px 8px;
+      cursor: pointer;
+      transition: all 120ms ease;
+      user-select: none;
+      touch-action: manipulation;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-user-select: none;
+    }
+
+    .numpad-btn:hover {
+      background: #f5e9dc;
+      border-color: #cdb39a;
+    }
+
+    .numpad-btn:active,
+    .numpad-btn:focus {
+      background: #ede1d0;
+      transform: scale(0.97);
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .numpad-btn.wide {
+      grid-column: span 2;
+    }
+
+    .numpad-btn.del {
+      background: #ffe0e0;
+      color: #c24848;
+    }
+
+    .numpad-btn.del:hover {
+      background: #ffc9c9;
+    }
+
+    .numpad-btn.clear {
+      background: #e0f0ff;
+      color: #2563b8;
+    }
+
+    .numpad-btn.clear:hover {
+      background: #c9e0ff;
+    }
+
+    @media (max-width: 920px) {
+      .calc-button {
+        bottom: 20px;
+        right: 20px;
+        width: 64px;
+        height: 64px;
+        font-size: 28px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .calc-button {
+        bottom: 16px;
+        right: 16px;
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+      }
+
+      .modal-container {
+        width: 95%;
+        max-width: 100%;
       }
     }
