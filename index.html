@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Codiac|| Microcontroller Programming </title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script> 
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">Codiac</div>
+      <div class="auth">
+      </div>
+    </header>
+  <main class="studio">
+      <section class="editor-pane">
+        <div class="editor-tabs">
+        </div>
+        <div class="workspace-wrap">
+          <div id="blocklyDiv"></div>
+        </div>
+      </section>
+
+      <aside class="right-pane">
+        <article class="card output-wrap">
+          <div class="panel-head">Generated C Code</div>
+          <div class="actions">
+            <button id="generateBtn" class="btn-primary">Generate C Code</button>
+          </div>
+          <pre id="output">Click "Generate C Code" to see output.</pre>
+        </article>
+      </aside>
+    </main>
+  </div>
+</body>
+</html>
