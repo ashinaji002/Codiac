@@ -18,7 +18,9 @@ const els = {
   numpadButtons: document.querySelectorAll('.numpad-btn'),
   fileMenuBtn: document.getElementById('fileMenuBtn'),
   fileMenu: document.getElementById('fileMenu'),
-  saveCBtn: document.getElementById('saveCBtn')
+  saveCBtn: document.getElementById('saveCBtn'),
+  openXmlBtn: document.getElementById('openXmlBtn'),
+  openXmlInput: document.getElementById('openXmlInput')
 };
 
 //Creates work Area
@@ -80,8 +82,24 @@ function initFileMenu() {
 
   if (els.saveCBtn) {
     els.saveCBtn.addEventListener('click', function () {
-      saveGeneratedCode('codiac-output.c');
+      saveWorkspaceXml('codiac-workspace.xml');
       closeMenu();
+    });
+  }
+
+  if (els.openXmlBtn && els.openXmlInput) {
+    els.openXmlBtn.addEventListener('click', function () {
+      els.openXmlInput.value = '';
+      els.openXmlInput.click();
+      closeMenu();
+    });
+
+    els.openXmlInput.addEventListener('change', function (event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) {
+        return;
+      }
+      loadWorkspaceXml(file);
     });
   }
 }
@@ -91,7 +109,46 @@ function saveGeneratedCode(filename) {
   if (!code) {
     return;
   }
-  triggerDownload(code, filename);
+  saveWithDialog(code, filename);
+}
+
+function saveWorkspaceXml(filename) {
+  if (!workspace || !Blockly || !Blockly.Xml) {
+    return;
+  }
+  const xmlDom = Blockly.Xml.workspaceToDom(workspace);
+  const xmlText = Blockly.Xml.domToPrettyText(xmlDom);
+  saveWithDialog(xmlText, filename, [
+    {
+      description: 'Blockly XML',
+      accept: { 'text/xml': ['.xml'] }
+    }
+  ]);
+}
+
+function loadWorkspaceXml(file) {
+  if (!workspace || !Blockly || !Blockly.Xml) {
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function () {
+    try {
+      const xmlText = String(reader.result || '');
+      let xmlDom = Blockly.Xml.textToDom
+        ? Blockly.Xml.textToDom(xmlText)
+        : new DOMParser().parseFromString(xmlText, 'text/xml');
+      if (xmlDom && xmlDom.documentElement) {
+        xmlDom = xmlDom.documentElement;
+      }
+      workspace.clear();
+      Blockly.Xml.domToWorkspace(xmlDom, workspace);
+    } catch (error) {
+      if (els.output) {
+        els.output.textContent = 'Error: Unable to load workspace XML.';
+      }
+    }
+  };
+  reader.readAsText(file);
 }
 
 function getOrBuildGeneratedCode() {
@@ -124,6 +181,34 @@ function triggerDownload(content, filename) {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+async function saveWithDialog(content, filename, types) {
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: types || [
+          {
+            description: 'C source',
+            accept: { 'text/x-csrc': ['.c'] }
+          },
+          {
+            description: 'Text',
+            accept: { 'text/plain': ['.txt'] }
+          }
+        ]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(content);
+      await writable.close();
+      return;
+    } catch (error) {
+      return;
+    }
+  }
+
+  triggerDownload(content, filename);
 }
 
 function initCalculator() {
