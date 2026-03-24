@@ -32,7 +32,9 @@ const els = {
   helpModalContainer: document.getElementById('helpModalContainer'),
   helpModalClose: document.getElementById('helpModalClose'),
   helpOkBtn: document.getElementById('helpOkBtn'),
-  helpCopyBtn: document.getElementById('helpCopyBtn')
+  helpCopyBtn: document.getElementById('helpCopyBtn'),
+  splitter: document.getElementById('splitter'),
+  studio: document.querySelector('.studio')
 };
 
 //Creates work Area
@@ -73,6 +75,7 @@ window.onload = function() {
   initFileMenu();
   initEditMenu();
   initHelpModal();
+  initSplitter();
 
 };
 
@@ -138,6 +141,87 @@ function initFileMenu() {
       }
       loadWorkspaceXml(file);
     });
+  }
+}
+
+function initSplitter() {
+  if (!els.splitter || !els.studio) {
+    return;
+  }
+
+  let isDragging = false;
+
+  function onPointerMove(event) {
+    if (!isDragging) {
+      return;
+    }
+    const rect = els.studio.getBoundingClientRect();
+    const pointerX = event.clientX || (event.touches && event.touches[0].clientX);
+    if (!pointerX) {
+      return;
+    }
+    const minEditor = 280;
+    const minOutput = 240;
+    const splitterWidth = 8;
+    let editorWidth = pointerX - rect.left;
+    const maxEditor = rect.width - minOutput - splitterWidth;
+    if (editorWidth < minEditor) {
+      editorWidth = minEditor;
+    }
+    if (editorWidth > maxEditor) {
+      editorWidth = maxEditor;
+    }
+    els.studio.style.gridTemplateColumns = editorWidth + 'px ' + splitterWidth + 'px minmax(' + minOutput + 'px, 1fr)';
+    try {
+      localStorage.setItem('codiacSplit', String(editorWidth));
+    } catch (error) {
+      // Ignore storage errors
+    }
+    scheduleWorkspaceResize();
+  }
+
+  function stopDragging() {
+    if (!isDragging) {
+      return;
+    }
+    isDragging = false;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', stopDragging);
+    window.removeEventListener('touchmove', onPointerMove);
+    window.removeEventListener('touchend', stopDragging);
+  }
+
+  els.splitter.addEventListener('pointerdown', function (event) {
+    event.preventDefault();
+    isDragging = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', stopDragging);
+  });
+
+  els.splitter.addEventListener('touchstart', function (event) {
+    event.preventDefault();
+    isDragging = true;
+    window.addEventListener('touchmove', onPointerMove, { passive: false });
+    window.addEventListener('touchend', stopDragging);
+  }, { passive: false });
+
+  try {
+    const saved = Number(localStorage.getItem('codiacSplit'));
+    if (saved && !Number.isNaN(saved)) {
+      const splitterWidth = 8;
+      const minOutput = 240;
+      const rect = els.studio.getBoundingClientRect();
+      const maxEditor = rect.width - minOutput - splitterWidth;
+      const editorWidth = Math.max(280, Math.min(saved, maxEditor));
+      els.studio.style.gridTemplateColumns = editorWidth + 'px ' + splitterWidth + 'px minmax(' + minOutput + 'px, 1fr)';
+      scheduleWorkspaceResize();
+    }
+  } catch (error) {
+    // Ignore storage errors
   }
 }
 

@@ -220,9 +220,29 @@
     .studio {
       flex: 1;
       display: grid;
-      grid-template-columns: 2fr 0.95fr;
+      grid-template-columns: var(--editor-width, 2fr) 8px var(--output-width, 0.95fr);
       gap: 10px;
       padding: 0 0 10px;
+    }
+
+    .splitter {
+      width: 8px;
+      background: linear-gradient(180deg, rgba(184, 135, 88, 0.35), rgba(146, 86, 41, 0.35));
+      border-radius: 6px;
+      cursor: col-resize;
+      position: relative;
+    }
+
+    .splitter::before {
+      content: '';
+      position: absolute;
+      top: 20%;
+      bottom: 20%;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      background: rgba(96, 66, 40, 0.4);
+      border-radius: 999px;
     }
 
     .editor-pane,
@@ -457,6 +477,10 @@
         grid-template-columns: 1fr;
       }
 
+      .splitter {
+        display: none;
+      }
+
       .workspace-wrap {
         min-height: 400px;
       }
@@ -471,13 +495,31 @@
     }
 
     @media (max-width: 768px) {
-      .topbar {
-        height: 52px;
-        padding: 0 12px;
+      .menu-row {
+        height: auto;
+        padding: 6px 10px;
+        flex-wrap: wrap;
       }
 
-      .brand {
-        font-size: 1rem;
+      .menu-left {
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .menu-link {
+        font-size: 0.82rem;
+        padding: 4px 6px;
+      }
+
+      .tool-row {
+        padding: 8px 10px 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .tool-left,
+      .tool-right {
+        gap: 6px;
       }
 
       .studio {
@@ -513,31 +555,24 @@
     }
 
     @media (max-width: 640px) {
-      .menu {
-        display: none;
+      .menu-row {
+        padding: 6px 8px;
       }
 
-      .menu-bar {
-        margin-left: 10px;
-      }
-
-      .menu-trigger {
-        font-size: 0.72rem;
-        padding: 6px 12px;
-      }
-
-      .topbar {
-        height: 48px;
-        padding: 0 10px;
-      }
-
-      .brand {
-        font-size: 0.95rem;
-      }
-
-      .auth {
-        gap: 10px;
+      .menu-link {
         font-size: 0.78rem;
+      }
+
+      .menu-dropdown {
+        min-width: 140px;
+      }
+
+      .tool-row {
+        padding: 8px 8px 10px;
+      }
+
+      .tool-right {
+        margin-left: auto;
       }
 
       .studio {
@@ -659,13 +694,16 @@
     }
 
     @media (max-width: 480px) {
-      .topbar {
-        height: 48px;
-        padding: 0 8px;
+      .menu-row {
+        padding: 6px 6px;
       }
 
-      .brand {
-        font-size: 0.9rem;
+      .tool-row {
+        padding: 8px 6px 10px;
+      }
+
+      .tool-right {
+        display: none;
       }
 
       .studio {
