@@ -81,17 +81,21 @@
         <div class="editor-tabs">
         </div>
         <div class="workspace-wrap">
+          <div id="toolboxSplitter" class="toolbox-splitter" aria-hidden="true"></div>
           <div id="blocklyDiv"></div>
         </div>
       </section>
-
-      <div class="splitter" id="splitter" aria-hidden="true"></div>
 
       <aside class="right-pane">
         <article class="card output-wrap">
           <div class="panel-head">Generated C Code</div>
           <div class="actions">
             <button id="generateBtn" class="btn-primary">Generate C Code</button>
+            <button id="downloadBtn" class="btn-icon" type="button" title="Download C">
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path d="M8 1.5l1.9 3.8 4.2.6-3 2.9.7 4.2L8 10.9 4.2 13l.7-4.2-3-2.9 4.2-.6L8 1.5z" />
+              </svg>
+            </button>
             <button id="copyBtn" class="btn-secondary" type="button">Copy Code</button>
           </div>
           <pre id="output">Click "Generate C Code" to see output.</pre>

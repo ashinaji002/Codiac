@@ -6,6 +6,7 @@ let workspaceDirty = false;
 const els = {
   generateBtn: document.getElementById('generateBtn'),
   copyBtn: document.getElementById('copyBtn'),
+  downloadBtn: document.getElementById('downloadBtn'),
   output: document.getElementById('output'),
   calcCircleBtn: document.getElementById('calcCircleBtn'),
   calcModal: document.getElementById('calcModal'),
@@ -33,8 +34,7 @@ const els = {
   helpModalClose: document.getElementById('helpModalClose'),
   helpOkBtn: document.getElementById('helpOkBtn'),
   helpCopyBtn: document.getElementById('helpCopyBtn'),
-  splitter: document.getElementById('splitter'),
-  studio: document.querySelector('.studio')
+  toolboxSplitter: document.getElementById('toolboxSplitter')
 };
 
 //Creates work Area
@@ -71,11 +71,31 @@ window.onload = function() {
     setCopyButtonLabel(copied ? 'Copied!' : 'Copy Failed');
   };
 
+  if (els.downloadBtn) {
+    els.downloadBtn.addEventListener('click', function () {
+      const code = String(els.output.textContent || '').trim();
+      if (!code || code === 'Click "Generate C Code" to see output.' || code.startsWith('Error:')) {
+        alert('Enter code first');
+        return;
+      }
+      saveWithDialog(code, 'codiac.c', [
+        {
+          description: 'C source',
+          accept: { 'text/x-csrc': ['.c'] }
+        },
+        {
+          description: 'Text',
+          accept: { 'text/plain': ['.txt'] }
+        }
+      ]);
+    });
+  }
+
   initCalculator();
   initFileMenu();
   initEditMenu();
   initHelpModal();
-  initSplitter();
+  initToolboxResizer();
 
 };
 
@@ -144,40 +164,47 @@ function initFileMenu() {
   }
 }
 
-function initSplitter() {
-  if (!els.splitter || !els.studio) {
+function initToolboxResizer() {
+  if (!els.toolboxSplitter || !workspace) {
     return;
   }
 
   let isDragging = false;
 
+  function applyWidth(width) {
+    const toolboxDiv = document.querySelector('.blocklyToolboxDiv');
+    if (!toolboxDiv) {
+      return;
+    }
+    toolboxDiv.style.width = width + 'px';
+    els.toolboxSplitter.style.left = width + 'px';
+    scheduleWorkspaceResize();
+  }
+
   function onPointerMove(event) {
     if (!isDragging) {
       return;
     }
-    const rect = els.studio.getBoundingClientRect();
+    const rect = workspace.getInjectionDiv().getBoundingClientRect();
     const pointerX = event.clientX || (event.touches && event.touches[0].clientX);
     if (!pointerX) {
       return;
     }
-    const minEditor = 280;
-    const minOutput = 240;
-    const splitterWidth = 8;
-    let editorWidth = pointerX - rect.left;
-    const maxEditor = rect.width - minOutput - splitterWidth;
-    if (editorWidth < minEditor) {
-      editorWidth = minEditor;
+    const minWidth = 160;
+    const maxWidth = Math.min(420, rect.width - 200);
+    let width = pointerX - rect.left;
+    if (width < minWidth) {
+      width = minWidth;
     }
-    if (editorWidth > maxEditor) {
-      editorWidth = maxEditor;
+    if (width > maxWidth) {
+      width = maxWidth;
     }
-    els.studio.style.gridTemplateColumns = editorWidth + 'px ' + splitterWidth + 'px minmax(' + minOutput + 'px, 1fr)';
+    applyWidth(width);
     try {
-      localStorage.setItem('codiacSplit', String(editorWidth));
+      localStorage.setItem('codiacToolboxWidth', String(width));
     } catch (error) {
       // Ignore storage errors
     }
-    scheduleWorkspaceResize();
   }
 
   function stopDragging() {
@@ -193,7 +220,7 @@ function initSplitter() {
     window.removeEventListener('touchend', stopDragging);
   }
 
-  els.splitter.addEventListener('pointerdown', function (event) {
+  els.toolboxSplitter.addEventListener('pointerdown', function (event) {
     event.preventDefault();
     isDragging = true;
     document.body.style.cursor = 'col-resize';
@@ -202,7 +229,7 @@ function initSplitter() {
     window.addEventListener('pointerup', stopDragging);
   });
 
-  els.splitter.addEventListener('touchstart', function (event) {
+  els.toolboxSplitter.addEventListener('touchstart', function (event) {
     event.preventDefault();
     isDragging = true;
     window.addEventListener('touchmove', onPointerMove, { passive: false });
@@ -210,15 +237,9 @@ function initSplitter() {
   }, { passive: false });
 
   try {
-    const saved = Number(localStorage.getItem('codiacSplit'));
+    const saved = Number(localStorage.getItem('codiacToolboxWidth'));
     if (saved && !Number.isNaN(saved)) {
-      const splitterWidth = 8;
-      const minOutput = 240;
-      const rect = els.studio.getBoundingClientRect();
-      const maxEditor = rect.width - minOutput - splitterWidth;
-      const editorWidth = Math.max(280, Math.min(saved, maxEditor));
-      els.studio.style.gridTemplateColumns = editorWidth + 'px ' + splitterWidth + 'px minmax(' + minOutput + 'px, 1fr)';
-      scheduleWorkspaceResize();
+      applyWidth(saved);
     }
   } catch (error) {
     // Ignore storage errors

@@ -220,29 +220,9 @@
     .studio {
       flex: 1;
       display: grid;
-      grid-template-columns: var(--editor-width, 2fr) 8px var(--output-width, 0.95fr);
+      grid-template-columns: 2fr 0.95fr;
       gap: 10px;
       padding: 0 0 10px;
-    }
-
-    .splitter {
-      width: 8px;
-      background: linear-gradient(180deg, rgba(184, 135, 88, 0.35), rgba(146, 86, 41, 0.35));
-      border-radius: 6px;
-      cursor: col-resize;
-      position: relative;
-    }
-
-    .splitter::before {
-      content: '';
-      position: absolute;
-      top: 20%;
-      bottom: 20%;
-      left: 50%;
-      width: 2px;
-      transform: translateX(-50%);
-      background: rgba(96, 66, 40, 0.4);
-      border-radius: 999px;
     }
 
     .editor-pane,
@@ -262,6 +242,7 @@
       border: 1px solid var(--line);
       border-radius: 10px;
       overflow: hidden;
+      position: relative;
     }
 
     .editor-tabs {
@@ -293,6 +274,29 @@
       position: relative;
       flex: 1;
       min-height: 560px;
+    }
+
+    .toolbox-splitter {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 240px;
+      width: 6px;
+      cursor: col-resize;
+      background: rgba(184, 135, 88, 0.25);
+      z-index: 5;
+    }
+
+    .toolbox-splitter::before {
+      content: '';
+      position: absolute;
+      top: 18%;
+      bottom: 18%;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      background: rgba(96, 66, 40, 0.45);
+      border-radius: 999px;
     }
 
     #blocklyDiv {
@@ -376,6 +380,39 @@
       align-items: center;
       justify-content: center;
       margin-left: auto;
+    }
+
+    .btn-icon {
+      border: 1px solid #c8ab8c;
+      border-radius: 10px;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      background: #fff3e7;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b4121;
+      cursor: pointer;
+      transition: transform 120ms ease, filter 120ms ease;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .btn-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .btn-icon:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+    }
+
+    .btn-icon:active {
+      transform: translateY(0);
     }
 
     .btn-secondary:hover {
@@ -477,7 +514,7 @@
         grid-template-columns: 1fr;
       }
 
-      .splitter {
+      .toolbox-splitter {
         display: none;
       }
 
