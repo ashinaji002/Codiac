@@ -954,8 +954,8 @@ function buildCProgram() {
   const delayHelpers = context.needsMsDelay
     ? 'void msdelay(void) {\n' +
       '  TMOD = 0x01;\n' +
-      '  TL0 = 0xFD;\n' +
-      '  TH0 = 0x4D;\n' +
+      '  TL0 = 0x66;\n' +
+      '  TH0 = 0xFC;\n' +
       '  TR0 = 1;\n' +
       '  while (TF0 == 0);\n' +
       '  TR0 = 0;\n' +
