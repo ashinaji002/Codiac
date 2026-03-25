@@ -412,32 +412,13 @@ function initFileMenu() {
     return;
   }
 
-  function toggleMenu() {
-    els.fileMenu.classList.toggle('open');
-  }
-
-  function closeMenu() {
-    els.fileMenu.classList.remove('open');
-  }
-
   els.fileMenuBtn.addEventListener('click', function (event) {
-    event.stopPropagation();
-    if (els.editMenu) {
-      els.editMenu.classList.remove('open');
-    }
-    toggleMenu();
-  });
-
-  document.addEventListener('click', function (event) {
-    if (!els.fileMenu.contains(event.target) && event.target !== els.fileMenuBtn) {
-      closeMenu();
-    }
+    event.preventDefault();
   });
 
   if (els.saveCBtn) {
     els.saveCBtn.addEventListener('click', function () {
       saveWorkspaceXml('codiac-workspace.xml');
-      closeMenu();
     });
   }
 
@@ -445,7 +426,6 @@ function initFileMenu() {
     els.uploadFileBtn.addEventListener('click', function () {
       els.uploadCInput.value = '';
       els.uploadCInput.click();
-      closeMenu();
     });
   }
 
@@ -459,7 +439,6 @@ function initFileMenu() {
           els.output.textContent = 'Click "Generate C Code" to see output.';
         }
         workspaceDirty = false;
-        closeMenu();
       }
     });
   }
@@ -469,7 +448,6 @@ function initFileMenu() {
       if (confirmDiscardIfNeeded()) {
         els.openXmlInput.value = '';
         els.openXmlInput.click();
-        closeMenu();
       }
     });
 
@@ -533,26 +511,8 @@ function initEditMenu() {
     return;
   }
 
-  function toggleMenu() {
-    els.editMenu.classList.toggle('open');
-  }
-
-  function closeMenu() {
-    els.editMenu.classList.remove('open');
-  }
-
   els.editMenuBtn.addEventListener('click', function (event) {
-    event.stopPropagation();
-    if (els.fileMenu) {
-      els.fileMenu.classList.remove('open');
-    }
-    toggleMenu();
-  });
-
-  document.addEventListener('click', function (event) {
-    if (!els.editMenu.contains(event.target) && event.target !== els.editMenuBtn) {
-      closeMenu();
-    }
+    event.preventDefault();
   });
 
   if (els.undoBtn) {
@@ -560,7 +520,6 @@ function initEditMenu() {
       if (workspace) {
         workspace.undo(false);
       }
-      closeMenu();
     });
   }
 
@@ -569,7 +528,6 @@ function initEditMenu() {
       if (workspace) {
         workspace.undo(true);
       }
-      closeMenu();
     });
   }
 
@@ -578,7 +536,6 @@ function initEditMenu() {
       if (confirmDiscardIfNeeded()) {
         createSampleProgram();
       }
-      closeMenu();
     });
   }
 }

@@ -109,8 +109,7 @@
       min-width: 150px;
     }
 
-    .menu-sub:hover > .menu-submenu,
-    .menu-sub:focus-within > .menu-submenu {
+    .menu-sub:hover > .menu-submenu {
       display: flex;
     }
 
@@ -127,8 +126,7 @@
       display: flex;
     }
 
-    .menu-item:hover > .menu-dropdown,
-    .menu-item:focus-within > .menu-dropdown {
+    .menu-item:hover > .menu-dropdown {
       display: flex;
     }
 
