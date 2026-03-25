@@ -34,6 +34,8 @@ const els = {
   undoBtn: document.getElementById('undoBtn'),
   redoBtn: document.getElementById('redoBtn'),
   sampleBtn: document.getElementById('sampleBtn'),
+  downloadFlashSh: document.getElementById('downloadFlashSh'),
+  downloadFlashBat: document.getElementById('downloadFlashBat'),
   helpBtn: document.getElementById('helpBtn'),
   helpModal: document.getElementById('helpModal'),
   helpModalContainer: document.getElementById('helpModalContainer'),
@@ -129,10 +131,25 @@ window.onload = function() {
   initCalculator();
   initFileMenu();
   initEditMenu();
+  initDownloadsMenu();
   initHelpModal();
   initBlocksTabs();
 
 };
+
+function initDownloadsMenu() {
+  if (els.downloadFlashSh) {
+    els.downloadFlashSh.addEventListener('click', function () {
+      downloadStaticFile('https://codiacide.vercel.app/files/script.sh', 'flash.sh');
+    });
+  }
+
+  if (els.downloadFlashBat) {
+    els.downloadFlashBat.addEventListener('click', function () {
+      downloadStaticFile('https://codiacide.vercel.app/files/Upload.bat', 'Upload.bat');
+    });
+  }
+}
 
 function initBlocksTabs() {
   const tabs = Array.from(document.querySelectorAll('.blocks-tab'));
