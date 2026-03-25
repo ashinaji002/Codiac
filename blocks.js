@@ -164,7 +164,7 @@ function initFileMenu() {
       saveWorkspaceXml('codiac-workspace.xml');
       closeMenu();
     });
-  }
+  }``
 
   if (els.uploadFileBtn && els.uploadCInput) {
     els.uploadFileBtn.addEventListener('click', function () {
