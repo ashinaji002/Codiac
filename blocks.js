@@ -934,6 +934,13 @@ function buildCProgram() {
     needsMsDelay: false
   };
   const topBlocks = workspace.getTopBlocks(true);
+  const allBlocks = workspace.getAllBlocks ? workspace.getAllBlocks(false) : [];
+
+  for (let i = 0; i < allBlocks.length; i++) {
+    if (allBlocks[i].type === 'timing_delay_ms') {
+      context.needsMsDelay = true;
+    }
+  }
 
   for (let i = 0; i < topBlocks.length; i++) {
     collectCodeFromChain(topBlocks[i], includes, declarations, statements, portModes, context);
@@ -986,7 +993,6 @@ function collectCodeFromChain(block, includes, declarations, statements, portMod
     'control_while',
     'control_for',
     'timing_delay_ms',
-    'timing_delay_seconds',
     'uart_init',
     'uart_send_text',
     'uart_send_variable'
@@ -1274,17 +1280,6 @@ Blockly.Blocks['timing_delay_ms'] = {
     this.appendDummyInput()
       .appendField('delay(ms)')
       .appendField(new Blockly.FieldNumber(100, 0, 1000000, 1), 'VALUE');
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(180);
-  }
-};
-
-Blockly.Blocks['timing_delay_seconds'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField('delay(seconds)')
-      .appendField(new Blockly.FieldNumber(1, 0, 3600, 1), 'VALUE');
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(180);
@@ -1594,11 +1589,6 @@ generator.forBlock['control_for'] = function(block) {
 generator.forBlock['timing_delay_ms'] = function(block) {
   const value = Math.max(0, Number(block.getFieldValue('VALUE')) || 0);
   return 'delay_ms(' + Math.floor(value) + ');\n';
-};
-
-generator.forBlock['timing_delay_seconds'] = function(block) {
-  const value = Math.max(0, Number(block.getFieldValue('VALUE')) || 0);
-  return 'delay_seconds(' + Math.floor(value) + ');\n';
 };
 
 generator.forBlock['uart_init'] = function(block) {
