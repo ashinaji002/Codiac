@@ -183,6 +183,24 @@
       background: var(--accent-strong);
     }
 
+    .upload-label {
+      display: inline-flex;
+      align-items: center;
+      height: 34px;
+      padding: 0 10px;
+      border-radius: 6px;
+      background: #fffaf4;
+      color: #6f533a;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      border: 1px solid #e0cdb8;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
 
     .tool-icon {
       width: 32px;

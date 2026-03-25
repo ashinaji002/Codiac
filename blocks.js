@@ -3,10 +3,14 @@ const generator = new Blockly.Generator('C');
 generator.ORDER_ATOMIC = 0;
 let workspace;
 let workspaceDirty = false;
+let uploadedCFile = null;
 const els = {
   generateBtn: document.getElementById('generateBtn'),
   copyBtn: document.getElementById('copyBtn'),
   downloadBtn: document.getElementById('downloadBtn'),
+  uploadBtn: document.getElementById('uploadBtn'),
+  uploadCInput: document.getElementById('uploadCInput'),
+  uploadLabel: document.getElementById('uploadLabel'),
   output: document.getElementById('output'),
   calcCircleBtn: document.getElementById('calcCircleBtn'),
   calcModal: document.getElementById('calcModal'),
@@ -21,6 +25,7 @@ const els = {
   fileMenuBtn: document.getElementById('fileMenuBtn'),
   fileMenu: document.getElementById('fileMenu'),
   saveCBtn: document.getElementById('saveCBtn'),
+  uploadFileBtn: document.getElementById('uploadFileBtn'),
   openXmlBtn: document.getElementById('openXmlBtn'),
   openXmlInput: document.getElementById('openXmlInput'),
   newWorkspaceBtn: document.getElementById('newWorkspaceBtn'),
@@ -92,6 +97,36 @@ window.onload = function() {
     });
   }
 
+  if (els.uploadBtn && els.uploadCInput) {
+    els.uploadBtn.addEventListener('click', function () {
+      els.uploadCInput.value = '';
+      els.uploadCInput.click();
+    });
+
+    els.uploadCInput.addEventListener('change', function (event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) {
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function () {
+        uploadedCFile = {
+          name: file.name,
+          content: String(reader.result || '')
+        };
+        if (els.uploadLabel) {
+          els.uploadLabel.textContent = file.name || 'C file uploaded';
+        }
+      };
+      reader.onerror = function () {
+        if (els.uploadLabel) {
+          els.uploadLabel.textContent = 'Upload failed';
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+
   initCalculator();
   initFileMenu();
   initEditMenu();
@@ -127,6 +162,14 @@ function initFileMenu() {
   if (els.saveCBtn) {
     els.saveCBtn.addEventListener('click', function () {
       saveWorkspaceXml('codiac-workspace.xml');
+      closeMenu();
+    });
+  }
+
+  if (els.uploadFileBtn && els.uploadCInput) {
+    els.uploadFileBtn.addEventListener('click', function () {
+      els.uploadCInput.value = '';
+      els.uploadCInput.click();
       closeMenu();
     });
   }

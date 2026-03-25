@@ -20,6 +20,7 @@
             <div id="fileMenu" class="menu-dropdown" role="menu" aria-label="File">
                 <button id="newWorkspaceBtn" class="menu-action" type="button" role="menuitem">New</button>
                 <button id="openXmlBtn" class="menu-action" type="button" role="menuitem">Open</button>
+              <button id="uploadFileBtn" class="menu-action" type="button" role="menuitem">Upload</button>
                 <button id="saveCBtn" class="menu-action" type="button" role="menuitem">Save As</button>
             </div>
           </div>
@@ -50,16 +51,12 @@
               <path d="M6.2 11.6 2.7 8.1l1.2-1.2 2.3 2.3 5-5 1.2 1.2-6.2 6.2z" />
             </svg>
           </button>
-          <button class="tool-btn" type="button" title="Upload">
+          <button id="uploadBtn" class="tool-btn" type="button" title="Upload">
             <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
               <path d="M8 2.5 12 6.5h-2.5V12h-3V6.5H4L8 2.5z" />
             </svg>
           </button>
-          <button class="tool-btn" type="button" title="Debug">
-            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-              <path d="M8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6z" />
-            </svg>
-          </button>
+          <span id="uploadLabel" class="upload-label" aria-live="polite">No file</span>
         </div>
         <div class="tool-right">
           <button class="tool-icon" type="button" title="Monitor">
@@ -75,6 +72,8 @@
         </div>
       </div>
     </header>
+
+    <input id="uploadCInput" type="file" accept=".sh" hidden />
 
     <!-- Calculator Circle Button -->
     <button id="calcCircleBtn" class="calc-button" title="Open Calculator">🧮</button>
