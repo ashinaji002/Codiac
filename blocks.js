@@ -930,7 +930,8 @@ function buildCProgram() {
   const statements = [];
   const portModes = {};
   const context = {
-    needsResetConfig: false
+    needsResetConfig: false,
+    needsMsDelay: false
   };
   const topBlocks = workspace.getTopBlocks(true);
 
@@ -943,7 +944,23 @@ function buildCProgram() {
   }
 
   const includeSection = Array.from(includes).join('');
-  const declarationSection = declarations.length ? declarations.join('') + '\n' : '';
+  const delayHelpers = context.needsMsDelay
+    ? 'void msdelay(void) {\n' +
+      '  TMOD = 0x01;\n' +
+      '  TL0 = 0xFD;\n' +
+      '  TH0 = 0x4D;\n' +
+      '  TR0 = 1;\n' +
+      '  while (TF0 == 0);\n' +
+      '  TR0 = 0;\n' +
+      '  TF0 = 0;\n' +
+      '}\n\n' +
+      'void delay_ms(unsigned int ms) {\n' +
+      '  while (ms--) {\n' +
+      '    msdelay();\n' +
+      '  }\n' +
+      '}\n\n'
+    : '';
+  const declarationSection = (declarations.length ? declarations.join('') + '\n' : '') + delayHelpers;
   const modeStatements = buildPortModeStatements(portModes);
   const resetStatements = context.needsResetConfig
     ? ['//Reset configuration\n', 'RSTCFG = 0x10;\n']
@@ -1014,6 +1031,9 @@ function collectCodeFromChain(block, includes, declarations, statements, portMod
         declarations.push(code);
       }
     } else if (statementTypes.has(type)) {
+      if (type === 'timing_delay_ms') {
+        context.needsMsDelay = true;
+      }
       const code = generateBlockCode(current);
       if (code) {
         statements.push(code);
