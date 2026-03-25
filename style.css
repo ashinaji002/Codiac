@@ -353,29 +353,6 @@
       min-height: 560px;
     }
 
-    .toolbox-splitter {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 240px;
-      width: 6px;
-      cursor: col-resize;
-      background: rgba(184, 135, 88, 0.25);
-      z-index: 5;
-    }
-
-    .toolbox-splitter::before {
-      content: '';
-      position: absolute;
-      top: 18%;
-      bottom: 18%;
-      left: 50%;
-      width: 2px;
-      transform: translateX(-50%);
-      background: rgba(96, 66, 40, 0.45);
-      border-radius: 999px;
-    }
-
     #blocklyDiv {
       height: 100%;
       width: 100%;
@@ -584,15 +561,28 @@
     .blocklyToolboxDiv {
       border-right: 1px solid #ddccb8 !important;
       background: #f8efe4 !important;
+      width: 240px !important;
+      min-width: 240px !important;
+      max-width: 240px !important;
+      box-sizing: border-box;
+    }
+
+    .blocklyFlyout,
+    .blocklyFlyoutBackground {
+      width: 260px !important;
+      min-width: 260px !important;
+      max-width: 260px !important;
+      box-sizing: border-box;
+    }
+
+    .blocklyFlyoutScrollbar {
+      width: 10px !important;
+      right: 0 !important;
     }
 
     @media (max-width: 920px) {
       .studio {
         grid-template-columns: 1fr;
-      }
-
-      .toolbox-splitter {
-        display: none;
       }
 
       .workspace-wrap {

@@ -93,7 +93,6 @@
             <button class="blocks-tab" type="button" data-category="Bitwise" data-icon="B" aria-label="Bitwise" title="Bitwise"></button>
           </nav>
           <div class="workspace-wrap">
-            <div id="toolboxSplitter" class="toolbox-splitter" aria-hidden="true"></div>
             <div id="blocklyDiv"></div>
           </div>
         </div>
@@ -203,14 +202,22 @@
     <block type="include_library"></block>
     <block type="initialize_8052"></block>
     <block type="assign_register_hex"></block>
-    <block type="assign_bit_value"></block>
     <block type="while_forever"></block>
     <block type="print_text"></block>
     <block type="text_input"></block>
   </xml>
 
-  <xml id="toolboxGPIO" style="display: none"></xml>
-  <xml id="toolboxControl" style="display: none"></xml>
+  <xml id="toolboxGPIO" style="display: none">
+    <block type="gpio_set_high"></block>
+    <block type="gpio_set_low"></block>
+    <block type="gpio_toggle"></block>
+    <block type="gpio_read"></block>
+  </xml>
+  <xml id="toolboxControl" style="display: none">
+    <block type="control_if"></block>
+    <block type="control_if_else"></block>
+    <block type="control_while"></block>
+  </xml>
   <xml id="toolboxLogic" style="display: none"></xml>
   <xml id="toolboxTiming" style="display: none"></xml>
   <xml id="toolboxUART" style="display: none"></xml>

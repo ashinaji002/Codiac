@@ -39,8 +39,7 @@ const els = {
   helpModalContainer: document.getElementById('helpModalContainer'),
   helpModalClose: document.getElementById('helpModalClose'),
   helpOkBtn: document.getElementById('helpOkBtn'),
-  helpCopyBtn: document.getElementById('helpCopyBtn'),
-  toolboxSplitter: document.getElementById('toolboxSplitter')
+  helpCopyBtn: document.getElementById('helpCopyBtn')
 };
 
 //Creates work Area
@@ -131,7 +130,6 @@ window.onload = function() {
   initFileMenu();
   initEditMenu();
   initHelpModal();
-  initToolboxResizer();
   initBlocksTabs();
 
 };
@@ -173,6 +171,9 @@ function initFileMenu() {
 
   els.fileMenuBtn.addEventListener('click', function (event) {
     event.stopPropagation();
+    if (els.editMenu) {
+      els.editMenu.classList.remove('open');
+    }
     toggleMenu();
   });
 
@@ -187,7 +188,7 @@ function initFileMenu() {
       saveWorkspaceXml('codiac-workspace.xml');
       closeMenu();
     });
-  }``
+  }
 
   if (els.uploadFileBtn && els.uploadCInput) {
     els.uploadFileBtn.addEventListener('click', function () {
@@ -228,88 +229,6 @@ function initFileMenu() {
       }
       loadWorkspaceXml(file);
     });
-  }
-}
-
-function initToolboxResizer() {
-  if (!els.toolboxSplitter || !workspace) {
-    return;
-  }
-
-  let isDragging = false;
-
-  function applyWidth(width) {
-    const toolboxDiv = document.querySelector('.blocklyToolboxDiv');
-    if (!toolboxDiv) {
-      return;
-    }
-    toolboxDiv.style.width = width + 'px';
-    els.toolboxSplitter.style.left = width + 'px';
-    scheduleWorkspaceResize();
-  }
-
-  function onPointerMove(event) {
-    if (!isDragging) {
-      return;
-    }
-    const rect = workspace.getInjectionDiv().getBoundingClientRect();
-    const pointerX = event.clientX || (event.touches && event.touches[0].clientX);
-    if (!pointerX) {
-      return;
-    }
-    const minWidth = 160;
-    const maxWidth = Math.min(420, rect.width - 200);
-    let width = pointerX - rect.left;
-    if (width < minWidth) {
-      width = minWidth;
-    }
-    if (width > maxWidth) {
-      width = maxWidth;
-    }
-    applyWidth(width);
-    try {
-      localStorage.setItem('codiacToolboxWidth', String(width));
-    } catch (error) {
-      // Ignore storage errors
-    }
-  }
-
-  function stopDragging() {
-    if (!isDragging) {
-      return;
-    }
-    isDragging = false;
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-    window.removeEventListener('pointermove', onPointerMove);
-    window.removeEventListener('pointerup', stopDragging);
-    window.removeEventListener('touchmove', onPointerMove);
-    window.removeEventListener('touchend', stopDragging);
-  }
-
-  els.toolboxSplitter.addEventListener('pointerdown', function (event) {
-    event.preventDefault();
-    isDragging = true;
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', stopDragging);
-  });
-
-  els.toolboxSplitter.addEventListener('touchstart', function (event) {
-    event.preventDefault();
-    isDragging = true;
-    window.addEventListener('touchmove', onPointerMove, { passive: false });
-    window.addEventListener('touchend', stopDragging);
-  }, { passive: false });
-
-  try {
-    const saved = Number(localStorage.getItem('codiacToolboxWidth'));
-    if (saved && !Number.isNaN(saved)) {
-      applyWidth(saved);
-    }
-  } catch (error) {
-    // Ignore storage errors
   }
 }
 
@@ -373,6 +292,9 @@ function initEditMenu() {
 
   els.editMenuBtn.addEventListener('click', function (event) {
     event.stopPropagation();
+    if (els.fileMenu) {
+      els.fileMenu.classList.remove('open');
+    }
     toggleMenu();
   });
 
@@ -761,7 +683,17 @@ ${statementSection}}`;
 }
 function collectCodeFromChain(block, includes, declarations, statements, portModes) {
   const declarationTypes = new Set(['initialize_8052']);
-  const statementTypes = new Set(['assign_bit_value', 'while_forever', 'print_text']);
+  const statementTypes = new Set([
+    'assign_bit_value',
+    'while_forever',
+    'print_text',
+    'gpio_set_high',
+    'gpio_set_low',
+    'gpio_toggle',
+    'control_if',
+    'control_if_else',
+    'control_while'
+  ]);
   let current = block;
 
   while (current) {
@@ -771,7 +703,7 @@ function collectCodeFromChain(block, includes, declarations, statements, portMod
       if (code) {
         includes.add(code);
       }
-    } else if (type === 'assign_register_hex') {
+    } else if (type === 'assign_register_hex' || type === 'gpio_set_mode') {
       const target = String(current.getFieldValue('TARGET') || '').trim();
       const mode = current.getFieldValue('MODE') === 'INPUT' ? 'INPUT' : 'OUTPUT';
       const pinInfo = parsePinTarget(target);
@@ -837,6 +769,13 @@ function indentCodeLines(code) {
   return lines.map(function (line) { return line ? '    ' + line : ''; }).join('\n') + '\n';
 }
 
+const PIN_OPTIONS = [
+  ['3.2', 'P3_2'],
+  ['3.3', 'P3_3'],
+  ['5.4', 'P5_4'],
+  ['5.5', 'P5_5']
+];
+
 // Include block
 Blockly.Blocks['start_block'] = {
   init: function () {
@@ -876,12 +815,7 @@ Blockly.Blocks['assign_register_hex'] = {
   init: function () {
     this.appendDummyInput()
       .appendField('set pin')
-      .appendField(new Blockly.FieldDropdown([
-        ['3.2', 'P3_2'],
-        ['3.3', 'P3_3'],
-        ['5.4', 'P5_4'],
-        ['5.5', 'P5_5']
-      ]), 'TARGET')
+      .appendField(new Blockly.FieldDropdown(PIN_OPTIONS), 'TARGET')
       .appendField('=')
       .appendField(new Blockly.FieldDropdown([
         ['output', 'OUTPUT'],
@@ -890,6 +824,65 @@ Blockly.Blocks['assign_register_hex'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(40);
+  }
+};
+
+Blockly.Blocks['gpio_set_mode'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('set pin mode')
+      .appendField(new Blockly.FieldDropdown(PIN_OPTIONS), 'TARGET')
+      .appendField('=')
+      .appendField(new Blockly.FieldDropdown([
+        ['output', 'OUTPUT'],
+        ['input', 'INPUT']
+      ]), 'MODE');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(40);
+  }
+};
+
+Blockly.Blocks['gpio_set_high'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('set pin HIGH')
+      .appendField(new Blockly.FieldDropdown(PIN_OPTIONS), 'TARGET');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(60);
+  }
+};
+
+Blockly.Blocks['gpio_set_low'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('set pin LOW')
+      .appendField(new Blockly.FieldDropdown(PIN_OPTIONS), 'TARGET');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(60);
+  }
+};
+
+Blockly.Blocks['gpio_toggle'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('toggle pin')
+      .appendField(new Blockly.FieldDropdown(PIN_OPTIONS), 'TARGET');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(60);
+  }
+};
+
+Blockly.Blocks['gpio_read'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('read pin')
+      .appendField(new Blockly.FieldDropdown(PIN_OPTIONS), 'TARGET');
+    this.setOutput(true, 'Boolean');
+    this.setColour(80);
   }
 };
 
@@ -906,6 +899,47 @@ Blockly.Blocks['assign_bit_value'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(65);
+  }
+};
+
+Blockly.Blocks['control_if'] = {
+  init: function () {
+    this.appendValueInput('COND')
+      .setCheck('Boolean')
+      .appendField('if');
+    this.appendStatementInput('DO')
+      .appendField('do');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(210);
+  }
+};
+
+Blockly.Blocks['control_if_else'] = {
+  init: function () {
+    this.appendValueInput('COND')
+      .setCheck('Boolean')
+      .appendField('if');
+    this.appendStatementInput('DO')
+      .appendField('do');
+    this.appendStatementInput('ELSE')
+      .appendField('else');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(210);
+  }
+};
+
+Blockly.Blocks['control_while'] = {
+  init: function () {
+    this.appendValueInput('COND')
+      .setCheck('Boolean')
+      .appendField('while');
+    this.appendStatementInput('DO')
+      .appendField('do');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(210);
   }
 };
 
@@ -968,10 +1002,53 @@ generator.forBlock['assign_register_hex'] = function(block) {
   return '';
 };
 
+generator.forBlock['gpio_set_mode'] = function(block) {
+  return '';
+};
+
+generator.forBlock['gpio_set_high'] = function(block) {
+  const target = sanitizeIdentifier(block.getFieldValue('TARGET'), 'TEMP_PIN');
+  return target + ' = 1;\n';
+};
+
+generator.forBlock['gpio_set_low'] = function(block) {
+  const target = sanitizeIdentifier(block.getFieldValue('TARGET'), 'TEMP_PIN');
+  return target + ' = 0;\n';
+};
+
+generator.forBlock['gpio_toggle'] = function(block) {
+  const target = sanitizeIdentifier(block.getFieldValue('TARGET'), 'TEMP_PIN');
+  return target + ' = !' + target + ';\n';
+};
+
+generator.forBlock['gpio_read'] = function(block) {
+  const target = sanitizeIdentifier(block.getFieldValue('TARGET'), 'TEMP_PIN');
+  return [target, generator.ORDER_ATOMIC];
+};
+
 generator.forBlock['assign_bit_value'] = function(block) {
   const target = sanitizeIdentifier(block.getFieldValue('TARGET'), 'TEMP_BIT');
   const value = block.getFieldValue('VALUE') === '1' ? '1' : '0';
   return target + ' = ' + value + ';\n';
+};
+
+generator.forBlock['control_if'] = function(block) {
+  const condition = generator.valueToCode(block, 'COND', generator.ORDER_ATOMIC) || '0';
+  const body = generator.statementToCode(block, 'DO');
+  return 'if (' + condition + ') {\n' + body + '}\n';
+};
+
+generator.forBlock['control_if_else'] = function(block) {
+  const condition = generator.valueToCode(block, 'COND', generator.ORDER_ATOMIC) || '0';
+  const body = generator.statementToCode(block, 'DO');
+  const elseBody = generator.statementToCode(block, 'ELSE');
+  return 'if (' + condition + ') {\n' + body + '} else {\n' + elseBody + '}\n';
+};
+
+generator.forBlock['control_while'] = function(block) {
+  const condition = generator.valueToCode(block, 'COND', generator.ORDER_ATOMIC) || '0';
+  const body = generator.statementToCode(block, 'DO');
+  return 'while (' + condition + ') {\n' + body + '}\n';
 };
 
 generator.forBlock['while_forever'] = function() {
