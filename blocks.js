@@ -135,25 +135,88 @@ window.onload = function() {
 };
 
 function initBlocksTabs() {
-  const tabs = document.querySelectorAll('.blocks-tab');
+  const tabs = Array.from(document.querySelectorAll('.blocks-tab'));
   if (!tabs.length || !workspace) {
     return;
   }
 
+  let activeIndex = Math.max(0, tabs.findIndex(function (tab) {
+    return tab.classList.contains('active');
+  }));
+  let switchLock = false;
+
+  function getFlyoutMetrics() {
+    const flyout = workspace.getFlyout && workspace.getFlyout();
+    if (!flyout) {
+      return null;
+    }
+    if (typeof flyout.getMetrics === 'function') {
+      return flyout.getMetrics();
+    }
+    if (flyout.workspace_ && typeof flyout.workspace_.getMetrics === 'function') {
+      return flyout.workspace_.getMetrics();
+    }
+    return null;
+  }
+
+  function setActiveCategory(index) {
+    if (index < 0 || index >= tabs.length) {
+      return;
+    }
+    const tab = tabs[index];
+    tabs.forEach(function (item) { item.classList.remove('active'); });
+    tab.classList.add('active');
+    activeIndex = index;
+
+    const category = tab.getAttribute('data-category');
+    const toolboxId = category ? 'toolbox' + category : '';
+    const toolbox = toolboxId ? document.getElementById(toolboxId) : null;
+    if (toolbox) {
+      workspace.updateToolbox(toolbox);
+      scheduleWorkspaceResize();
+    }
+  }
+
   tabs.forEach(function (tab) {
     tab.addEventListener('click', function () {
-      tabs.forEach(function (item) { item.classList.remove('active'); });
-      tab.classList.add('active');
-
-      const category = tab.getAttribute('data-category');
-      const toolboxId = category ? 'toolbox' + category : '';
-      const toolbox = toolboxId ? document.getElementById(toolboxId) : null;
-      if (toolbox) {
-        workspace.updateToolbox(toolbox);
-        scheduleWorkspaceResize();
-      }
+      const index = tabs.indexOf(tab);
+      setActiveCategory(index);
     });
   });
+
+  const blocklyDiv = workspace.getInjectionDiv && workspace.getInjectionDiv();
+  if (blocklyDiv) {
+    blocklyDiv.addEventListener('wheel', function (event) {
+      if (switchLock) {
+        return;
+      }
+
+      const metrics = getFlyoutMetrics();
+      if (!metrics) {
+        return;
+      }
+
+      const viewTop = Number(metrics.viewTop) || 0;
+      const viewHeight = Number(metrics.viewHeight) || 0;
+      const contentHeight = Number(metrics.contentHeight) || 0;
+      const atTop = viewTop <= 2;
+      const atBottom = (viewTop + viewHeight) >= (contentHeight - 2);
+
+      if (event.deltaY > 0 && atBottom && activeIndex < tabs.length - 1) {
+        switchLock = true;
+        event.preventDefault();
+        setActiveCategory(activeIndex + 1);
+        setTimeout(function () { switchLock = false; }, 180);
+      } else if (event.deltaY < 0 && atTop && activeIndex > 0) {
+        switchLock = true;
+        event.preventDefault();
+        setActiveCategory(activeIndex - 1);
+        setTimeout(function () { switchLock = false; }, 180);
+      }
+    }, { passive: false });
+  }
+
+  setActiveCategory(activeIndex);
 }
 
 function initFileMenu() {
@@ -661,10 +724,13 @@ function buildCProgram() {
   const declarations = [];
   const statements = [];
   const portModes = {};
+  const context = {
+    needsResetConfig: false
+  };
   const topBlocks = workspace.getTopBlocks(true);
 
   for (let i = 0; i < topBlocks.length; i++) {
-    collectCodeFromChain(topBlocks[i], includes, declarations, statements, portModes);
+    collectCodeFromChain(topBlocks[i], includes, declarations, statements, portModes, context);
   }
 
   if (includes.size === 0) {
@@ -674,14 +740,17 @@ function buildCProgram() {
   const includeSection = Array.from(includes).join('');
   const declarationSection = declarations.length ? declarations.join('') + '\n' : '';
   const modeStatements = buildPortModeStatements(portModes);
-  const allStatements = modeStatements.concat(statements);
+  const resetStatements = context.needsResetConfig
+    ? ['//Reset configuration\n', 'RSTCFG = 0x10;\n']
+    : [];
+  const allStatements = modeStatements.concat(resetStatements, statements);
   const statementSection = allStatements.length ? indentCodeLines(allStatements.join('')) : '';
 
   return `${includeSection}
 ${declarationSection}void main(void) {
 ${statementSection}}`;
 }
-function collectCodeFromChain(block, includes, declarations, statements, portModes) {
+function collectCodeFromChain(block, includes, declarations, statements, portModes, context) {
   const declarationTypes = new Set(['initialize_8052']);
   const statementTypes = new Set([
     'assign_bit_value',
@@ -692,7 +761,13 @@ function collectCodeFromChain(block, includes, declarations, statements, portMod
     'gpio_toggle',
     'control_if',
     'control_if_else',
-    'control_while'
+    'control_while',
+    'control_for',
+    'timing_delay_ms',
+    'timing_delay_seconds',
+    'uart_init',
+    'uart_send_text',
+    'uart_send_variable'
   ]);
   let current = block;
 
@@ -702,6 +777,12 @@ function collectCodeFromChain(block, includes, declarations, statements, portMod
       const code = generateBlockCode(current);
       if (code) {
         includes.add(code);
+      }
+    } else if (/^uart_/.test(type)) {
+      includes.add('#include <uart.h>\n');
+      const code = generateBlockCode(current);
+      if (code) {
+        statements.push(code);
       }
     } else if (type === 'assign_register_hex' || type === 'gpio_set_mode') {
       const target = String(current.getFieldValue('TARGET') || '').trim();
@@ -720,6 +801,9 @@ function collectCodeFromChain(block, includes, declarations, statements, portMod
         }
       }
     } else if (declarationTypes.has(type)) {
+      if (type === 'initialize_8052') {
+        context.needsResetConfig = true;
+      }
       const code = generateBlockCode(current);
       if (code) {
         declarations.push(code);
@@ -943,6 +1027,223 @@ Blockly.Blocks['control_while'] = {
   }
 };
 
+Blockly.Blocks['control_for'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('for')
+      .appendField(new Blockly.FieldTextInput('i = 0'), 'INIT')
+      .appendField(';')
+      .appendField(new Blockly.FieldTextInput('i < 10'), 'COND')
+      .appendField(';')
+      .appendField(new Blockly.FieldTextInput('i++'), 'STEP');
+    this.appendStatementInput('DO')
+      .appendField('do');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(210);
+  }
+};
+
+Blockly.Blocks['timing_delay_ms'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('delay(ms)')
+      .appendField(new Blockly.FieldNumber(100, 0, 1000000, 1), 'VALUE');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(180);
+  }
+};
+
+Blockly.Blocks['timing_delay_seconds'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('delay(seconds)')
+      .appendField(new Blockly.FieldNumber(1, 0, 3600, 1), 'VALUE');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(180);
+  }
+};
+
+Blockly.Blocks['uart_init'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('UART init')
+      .appendField(new Blockly.FieldDropdown([
+        ['9600', '9600'],
+        ['19200', '19200'],
+        ['38400', '38400'],
+        ['57600', '57600'],
+        ['115200', '115200']
+      ]), 'BAUD');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(290);
+  }
+};
+
+Blockly.Blocks['uart_send_text'] = {
+  init: function () {
+    this.appendValueInput('TEXT')
+      .setCheck('String')
+      .appendField('UART send text');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(290);
+  }
+};
+
+Blockly.Blocks['uart_send_variable'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('UART send variable')
+      .appendField(new Blockly.FieldTextInput('value'), 'NAME');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(290);
+  }
+};
+
+Blockly.Blocks['uart_receive'] = {
+  init: function () {
+    this.appendDummyInput().appendField('UART receive');
+    this.setOutput(true);
+    this.setColour(290);
+  }
+};
+
+Blockly.Blocks['logic_equal'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('==')
+      .appendField(new Blockly.FieldNumber(0, -2147483648, 2147483647, 1), 'A')
+      .appendField('==')
+      .appendField(new Blockly.FieldNumber(0, -2147483648, 2147483647, 1), 'B');
+    this.setOutput(true, 'Boolean');
+    this.setColour(230);
+  }
+};
+
+Blockly.Blocks['logic_not_equal'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('!=')
+      .appendField(new Blockly.FieldNumber(0, -2147483648, 2147483647, 1), 'A')
+      .appendField('!=')
+      .appendField(new Blockly.FieldNumber(0, -2147483648, 2147483647, 1), 'B');
+    this.setOutput(true, 'Boolean');
+    this.setColour(230);
+  }
+};
+
+Blockly.Blocks['logic_and'] = {
+  init: function () {
+    this.appendValueInput('A')
+      .setCheck('Boolean')
+      .appendField('AND');
+    this.appendValueInput('B')
+      .setCheck('Boolean')
+      .appendField('and');
+    this.setOutput(true, 'Boolean');
+    this.setColour(230);
+  }
+};
+
+Blockly.Blocks['logic_or'] = {
+  init: function () {
+    this.appendValueInput('A')
+      .setCheck('Boolean')
+      .appendField('OR');
+    this.appendValueInput('B')
+      .setCheck('Boolean')
+      .appendField('or');
+    this.setOutput(true, 'Boolean');
+    this.setColour(230);
+  }
+};
+
+Blockly.Blocks['logic_not'] = {
+  init: function () {
+    this.appendValueInput('A')
+      .setCheck('Boolean')
+      .appendField('NOT');
+    this.setOutput(true, 'Boolean');
+    this.setColour(230);
+  }
+};
+
+Blockly.Blocks['bitwise_and'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('AND (&)')
+      .appendField(new Blockly.FieldNumber(0, 0, 65535, 1), 'A')
+      .appendField('&')
+      .appendField(new Blockly.FieldNumber(0, 0, 65535, 1), 'B');
+    this.setOutput(true);
+    this.setColour(330);
+  }
+};
+
+Blockly.Blocks['bitwise_or'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('OR (|)')
+      .appendField(new Blockly.FieldNumber(0, 0, 65535, 1), 'A')
+      .appendField('|')
+      .appendField(new Blockly.FieldNumber(0, 0, 65535, 1), 'B');
+    this.setOutput(true);
+    this.setColour(330);
+  }
+};
+
+Blockly.Blocks['bitwise_xor'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('XOR (^)')
+      .appendField(new Blockly.FieldNumber(0, 0, 65535, 1), 'A')
+      .appendField('^')
+      .appendField(new Blockly.FieldNumber(0, 0, 65535, 1), 'B');
+    this.setOutput(true);
+    this.setColour(330);
+  }
+};
+
+Blockly.Blocks['bitwise_not'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('NOT (~)')
+      .appendField('~')
+      .appendField(new Blockly.FieldNumber(0, 0, 65535, 1), 'A');
+    this.setOutput(true);
+    this.setColour(330);
+  }
+};
+
+Blockly.Blocks['bitwise_shift_left'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('shift left (<<)')
+      .appendField(new Blockly.FieldNumber(0, 0, 65535, 1), 'A')
+      .appendField('<<')
+      .appendField(new Blockly.FieldNumber(1, 0, 31, 1), 'B');
+    this.setOutput(true);
+    this.setColour(330);
+  }
+};
+
+Blockly.Blocks['bitwise_shift_right'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('shift right (>>)')
+      .appendField(new Blockly.FieldNumber(0, 0, 65535, 1), 'A')
+      .appendField('>>')
+      .appendField(new Blockly.FieldNumber(1, 0, 31, 1), 'B');
+    this.setOutput(true);
+    this.setColour(330);
+  }
+};
+
 Blockly.Blocks['while_forever'] = {
   init: function () {
     this.appendDummyInput().appendField('while(1);');
@@ -991,6 +1292,7 @@ generator.forBlock['initialize_8052'] = function() {
     '//define pinmode sfr of port 5\n' +
     '__sfr __at (0xCA) P5M0;\n' +
     '__sfr __at (0xC9) P5M1;\n' +
+    '__sfr __at (0xFF) RSTCFG;\n' +
     '//set values of output port register\n' +
     '__sbit __at (0xB2) P3_2;\n' +
     '__sbit __at (0xB3) P3_3;\n' +
@@ -1049,6 +1351,107 @@ generator.forBlock['control_while'] = function(block) {
   const condition = generator.valueToCode(block, 'COND', generator.ORDER_ATOMIC) || '0';
   const body = generator.statementToCode(block, 'DO');
   return 'while (' + condition + ') {\n' + body + '}\n';
+};
+
+generator.forBlock['control_for'] = function(block) {
+  const init = String(block.getFieldValue('INIT') || '').trim();
+  const condition = String(block.getFieldValue('COND') || '').trim() || '1';
+  const step = String(block.getFieldValue('STEP') || '').trim();
+  const body = generator.statementToCode(block, 'DO');
+  return 'for (' + init + '; ' + condition + '; ' + step + ') {\n' + body + '}\n';
+};
+
+generator.forBlock['timing_delay_ms'] = function(block) {
+  const value = Math.max(0, Number(block.getFieldValue('VALUE')) || 0);
+  return 'delay_ms(' + Math.floor(value) + ');\n';
+};
+
+generator.forBlock['timing_delay_seconds'] = function(block) {
+  const value = Math.max(0, Number(block.getFieldValue('VALUE')) || 0);
+  return 'delay_seconds(' + Math.floor(value) + ');\n';
+};
+
+generator.forBlock['uart_init'] = function(block) {
+  const baud = String(block.getFieldValue('BAUD') || '9600');
+  return 'UART_Init(' + baud + ');\n';
+};
+
+generator.forBlock['uart_send_text'] = function(block) {
+  const text = generator.valueToCode(block, 'TEXT', generator.ORDER_ATOMIC) || '""';
+  return 'UART_SendText(' + text + ');\n';
+};
+
+generator.forBlock['uart_send_variable'] = function(block) {
+  const name = sanitizeIdentifier(block.getFieldValue('NAME'), 'value');
+  return 'UART_SendVariable(' + name + ');\n';
+};
+
+generator.forBlock['uart_receive'] = function() {
+  return ['UART_Receive()', generator.ORDER_ATOMIC];
+};
+
+generator.forBlock['logic_equal'] = function(block) {
+  const a = Number(block.getFieldValue('A')) || 0;
+  const b = Number(block.getFieldValue('B')) || 0;
+  return ['(' + a + ' == ' + b + ')', generator.ORDER_ATOMIC];
+};
+
+generator.forBlock['logic_not_equal'] = function(block) {
+  const a = Number(block.getFieldValue('A')) || 0;
+  const b = Number(block.getFieldValue('B')) || 0;
+  return ['(' + a + ' != ' + b + ')', generator.ORDER_ATOMIC];
+};
+
+generator.forBlock['logic_and'] = function(block) {
+  const a = generator.valueToCode(block, 'A', generator.ORDER_ATOMIC) || '0';
+  const b = generator.valueToCode(block, 'B', generator.ORDER_ATOMIC) || '0';
+  return ['((' + a + ') && (' + b + '))', generator.ORDER_ATOMIC];
+};
+
+generator.forBlock['logic_or'] = function(block) {
+  const a = generator.valueToCode(block, 'A', generator.ORDER_ATOMIC) || '0';
+  const b = generator.valueToCode(block, 'B', generator.ORDER_ATOMIC) || '0';
+  return ['((' + a + ') || (' + b + '))', generator.ORDER_ATOMIC];
+};
+
+generator.forBlock['logic_not'] = function(block) {
+  const a = generator.valueToCode(block, 'A', generator.ORDER_ATOMIC) || '0';
+  return ['(!(' + a + '))', generator.ORDER_ATOMIC];
+};
+
+generator.forBlock['bitwise_and'] = function(block) {
+  const a = Number(block.getFieldValue('A')) || 0;
+  const b = Number(block.getFieldValue('B')) || 0;
+  return ['(' + a + ' & ' + b + ')', generator.ORDER_ATOMIC];
+};
+
+generator.forBlock['bitwise_or'] = function(block) {
+  const a = Number(block.getFieldValue('A')) || 0;
+  const b = Number(block.getFieldValue('B')) || 0;
+  return ['(' + a + ' | ' + b + ')', generator.ORDER_ATOMIC];
+};
+
+generator.forBlock['bitwise_xor'] = function(block) {
+  const a = Number(block.getFieldValue('A')) || 0;
+  const b = Number(block.getFieldValue('B')) || 0;
+  return ['(' + a + ' ^ ' + b + ')', generator.ORDER_ATOMIC];
+};
+
+generator.forBlock['bitwise_not'] = function(block) {
+  const a = Number(block.getFieldValue('A')) || 0;
+  return ['(~' + a + ')', generator.ORDER_ATOMIC];
+};
+
+generator.forBlock['bitwise_shift_left'] = function(block) {
+  const a = Number(block.getFieldValue('A')) || 0;
+  const b = Number(block.getFieldValue('B')) || 0;
+  return ['(' + a + ' << ' + b + ')', generator.ORDER_ATOMIC];
+};
+
+generator.forBlock['bitwise_shift_right'] = function(block) {
+  const a = Number(block.getFieldValue('A')) || 0;
+  const b = Number(block.getFieldValue('B')) || 0;
+  return ['(' + a + ' >> ' + b + ')', generator.ORDER_ATOMIC];
 };
 
 generator.forBlock['while_forever'] = function() {
