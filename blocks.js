@@ -931,7 +931,8 @@ function buildCProgram() {
   const portModes = {};
   const context = {
     needsResetConfig: false,
-    needsMsDelay: false
+    needsMsDelay: false,
+    needsTone: false
   };
   const topBlocks = workspace.getTopBlocks(true);
   const allBlocks = workspace.getAllBlocks ? workspace.getAllBlocks(false) : [];
@@ -939,6 +940,9 @@ function buildCProgram() {
   for (let i = 0; i < allBlocks.length; i++) {
     if (allBlocks[i].type === 'timing_delay_ms') {
       context.needsMsDelay = true;
+    }
+    if (allBlocks[i].type === 'tone') {
+      context.needsTone = true;
     }
   }
 
@@ -967,7 +971,49 @@ function buildCProgram() {
       '  }\n' +
       '}\n\n'
     : '';
-  const declarationSection = (declarations.length ? declarations.join('') + '\n' : '') + delayHelpers;
+  const toneHelpers = context.needsTone
+    ? 'volatile unsigned char tone_pin = 0;\n' +
+      'volatile unsigned char tone_active = 0;\n\n' +
+      'void tone(unsigned int frequency, unsigned char pin) {\n' +
+      '  unsigned long timer_freq = 11059200UL / 12UL;\n' +
+      '  unsigned long ticks;\n' +
+      '  unsigned int reload;\n' +
+      '  if (frequency == 0) {\n' +
+      '    tone_active = 0;\n' +
+      '    TR1 = 0;\n' +
+      '    return;\n' +
+      '  }\n' +
+      '  tone_pin = pin;\n' +
+      '  ticks = timer_freq / (2UL * (unsigned long)frequency);\n' +
+      '  if (ticks > 65535UL) {\n' +
+      '    ticks = 65535UL;\n' +
+      '  }\n' +
+      '  reload = (unsigned int)(65536UL - ticks);\n' +
+      '  TMOD = (TMOD & 0x0F) | 0x10;\n' +
+      '  TH1 = (unsigned char)(reload >> 8);\n' +
+      '  TL1 = (unsigned char)(reload & 0xFF);\n' +
+      '  TF1 = 0;\n' +
+      '  ET1 = 1;\n' +
+      '  EA = 1;\n' +
+      '  TR1 = 1;\n' +
+      '  tone_active = 1;\n' +
+      '}\n\n' +
+      'void timer1_isr(void) __interrupt(3) {\n' +
+      '  if (!tone_active) {\n' +
+      '    return;\n' +
+      '  }\n' +
+      '  if (tone_pin == 32) {\n' +
+      '    P3_2 = !P3_2;\n' +
+      '  } else if (tone_pin == 33) {\n' +
+      '    P3_3 = !P3_3;\n' +
+      '  } else if (tone_pin == 54) {\n' +
+      '    P5_4 = !P5_4;\n' +
+      '  } else if (tone_pin == 55) {\n' +
+      '    P5_5 = !P5_5;\n' +
+      '  }\n' +
+      '}\n\n'
+    : '';
+  const declarationSection = (declarations.length ? declarations.join('') + '\n' : '') + delayHelpers + toneHelpers;
   const modeStatements = buildPortModeStatements(portModes);
   const resetStatements = context.needsResetConfig
     ? ['//Reset configuration\n', 'RSTCFG = 0x10;\n']
@@ -993,6 +1039,7 @@ function collectCodeFromChain(block, includes, declarations, statements, portMod
     'control_while',
     'control_for',
     'timing_delay_ms',
+    'tone',
     'uart_init',
     'uart_send_text',
     'uart_send_variable'
@@ -1039,6 +1086,9 @@ function collectCodeFromChain(block, includes, declarations, statements, portMod
     } else if (statementTypes.has(type)) {
       if (type === 'timing_delay_ms') {
         context.needsMsDelay = true;
+      }
+      if (type === 'tone') {
+        context.needsTone = true;
       }
       const code = generateBlockCode(current);
       if (code) {
@@ -1280,6 +1330,20 @@ Blockly.Blocks['timing_delay_ms'] = {
     this.appendDummyInput()
       .appendField('delay(ms)')
       .appendField(new Blockly.FieldNumber(100, 0, 1000000, 1), 'VALUE');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(180);
+  }
+};
+
+Blockly.Blocks['tone'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('tone')
+      .appendField('freq')
+      .appendField(new Blockly.FieldNumber(1000, 1, 20000, 1), 'FREQ')
+      .appendField('pin')
+      .appendField(new Blockly.FieldDropdown(PIN_OPTIONS), 'PIN');
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(180);
@@ -1591,6 +1655,13 @@ generator.forBlock['timing_delay_ms'] = function(block) {
   return 'delay_ms(' + Math.floor(value) + ');\n';
 };
 
+generator.forBlock['tone'] = function(block) {
+  const frequency = Math.max(1, Number(block.getFieldValue('FREQ')) || 1);
+  const pinValue = String(block.getFieldValue('PIN') || '');
+  const pinNumber = pinTargetToNumber(pinValue);
+  return 'tone(' + Math.floor(frequency) + ', ' + pinNumber + ');\n';
+};
+
 generator.forBlock['uart_init'] = function(block) {
   const baud = String(block.getFieldValue('BAUD') || '9600');
   return 'UART_Init(' + baud + ');\n';
@@ -1724,6 +1795,15 @@ function parsePinTarget(target) {
     port: 'P' + match[1],
     bit: Number(match[2])
   };
+}
+
+function pinTargetToNumber(target) {
+  const pinInfo = parsePinTarget(target);
+  if (!pinInfo) {
+    return 32;
+  }
+  const portNumber = Number(pinInfo.port.replace('P', ''));
+  return (portNumber * 10) + pinInfo.bit;
 }
 
 function toHexByte(value) {
