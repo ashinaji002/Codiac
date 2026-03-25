@@ -1412,8 +1412,11 @@ Blockly.Blocks['bitwise_shift_right'] = {
 
 Blockly.Blocks['while_forever'] = {
   init: function () {
-    this.appendDummyInput().appendField('while(1);');
+    this.appendDummyInput().appendField('while (1)');
+    this.appendStatementInput('DO')
+      .appendField('do');
     this.setPreviousStatement(true);
+    this.setNextStatement(true);
     this.setColour(15);
   }
 };
@@ -1423,9 +1426,11 @@ Blockly.Blocks['print_text'] = {
   init: function () {
     this.appendValueInput("TEXT")
       .setCheck("String")
-      .appendField("print");
+      .appendField("print")
+      .setAlign(Blockly.ALIGN_RIGHT);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
+    this.setInputsInline(true);
     this.setColour(160);
   }
 };
@@ -1620,8 +1625,9 @@ generator.forBlock['bitwise_shift_right'] = function(block) {
   return ['(' + a + ' >> ' + b + ')', generator.ORDER_ATOMIC];
 };
 
-generator.forBlock['while_forever'] = function() {
-  return 'while(1);\n';
+generator.forBlock['while_forever'] = function(block) {
+  const body = generator.statementToCode(block, 'DO');
+  return 'while (1) {\n' + body + '}\n';
 };
 
 generator.forBlock['print_text'] = function(block) {
