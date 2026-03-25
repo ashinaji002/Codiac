@@ -99,6 +99,30 @@
       z-index: 50;
     }
 
+    .menu-sub {
+      position: relative;
+    }
+
+    .menu-submenu {
+      top: 4px;
+      left: calc(100% - 4px);
+      min-width: 150px;
+    }
+
+    .menu-sub:hover > .menu-submenu,
+    .menu-sub:focus-within > .menu-submenu {
+      display: flex;
+    }
+
+    .menu-parent {
+      width: 100%;
+    }
+
+    .menu-caret {
+      font-size: 0.75rem;
+      color: #9b7d5f;
+    }
+
     .menu-dropdown.open {
       display: flex;
     }

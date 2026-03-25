@@ -34,6 +34,8 @@ const els = {
   undoBtn: document.getElementById('undoBtn'),
   redoBtn: document.getElementById('redoBtn'),
   sampleBtn: document.getElementById('sampleBtn'),
+  downloadFlashSh: document.getElementById('downloadFlashSh'),
+  downloadFlashBat: document.getElementById('downloadFlashBat'),
   helpBtn: document.getElementById('helpBtn'),
   helpModal: document.getElementById('helpModal'),
   helpModalContainer: document.getElementById('helpModalContainer'),
@@ -129,10 +131,25 @@ window.onload = function() {
   initCalculator();
   initFileMenu();
   initEditMenu();
+  initDownloadsMenu();
   initHelpModal();
   initBlocksTabs();
 
 };
+
+function initDownloadsMenu() {
+  if (els.downloadFlashSh) {
+    els.downloadFlashSh.addEventListener('click', function () {
+      downloadStaticFile('public/files/flash.sh', 'flash.sh');
+    });
+  }
+
+  if (els.downloadFlashBat) {
+    els.downloadFlashBat.addEventListener('click', function () {
+      downloadStaticFile('public/files/Upload.bat', 'Upload.bat');
+    });
+  }
+}
 
 function initBlocksTabs() {
   const tabs = Array.from(document.querySelectorAll('.blocks-tab'));
@@ -516,6 +533,16 @@ function triggerDownload(content, filename) {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+function downloadStaticFile(path, filename) {
+  const link = document.createElement('a');
+  link.href = path;
+  link.download = filename || '';
+  link.rel = 'noopener';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 async function saveWithDialog(content, filename, types) {
