@@ -140,7 +140,7 @@ window.onload = function() {
 function initDownloadsMenu() {
   if (els.downloadFlashSh) {
     els.downloadFlashSh.addEventListener('click', function () {
-      downloadStaticFile('https://codiacide.vercel.app/files/script.sh', 'flash.sh');
+      downloadStaticFile('https://codiacide.vercel.app/files/flash.sh', 'flash.sh');
     });
   }
 
