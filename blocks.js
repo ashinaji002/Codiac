@@ -1,6 +1,11 @@
 // 1. CREATE GENERATOR FIRST
 const generator = new Blockly.Generator('C');
 generator.ORDER_ATOMIC = 0;
+generator.scrub_ = function (block, code, thisOnly) {
+  const nextBlock = block.nextConnection && block.nextConnection.targetBlock();
+  const nextCode = thisOnly || !nextBlock ? '' : generator.blockToCode(nextBlock);
+  return code + nextCode;
+};
 let workspace;
 let workspaceDirty = false;
 let uploadedCFile = null;
