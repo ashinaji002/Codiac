@@ -207,6 +207,69 @@
     </div>
   </div>
 
+  <!-- Verify Modal -->
+  <div id="verifyModal" class="modal-overlay">
+    <div id="verifyModalContainer" class="modal-container verify-modal">
+      <div class="modal-header">
+        <div class="modal-title">Verify Instructions</div>
+        <button id="verifyModalClose" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body verify-body">
+        <ol class="verify-steps">
+          <li>
+            <div class="verify-step">
+              <span class="verify-step-title">Step 1:</span>
+              Download the shell script into your project folder.
+            </div>
+            <button id="verifyDownloadShBtn" class="btn-secondary verify-btn" type="button">
+              Download flash.sh (Linux)
+            </button>
+          </li>
+          <li>
+            <div class="verify-step">
+              <span class="verify-step-title">Step 2:</span>
+              Download your generated C code to your project folder (use Save As).
+            </div>
+            <button id="verifyDownloadCBtn" class="btn-secondary verify-btn" type="button">
+              Download C Code (Save As)
+            </button>
+          </li>
+          <li>
+            <div class="verify-step">
+              <span class="verify-step-title">Step 3:</span>
+              Open your terminal and change directory to your project folder.
+            </div>
+          </li>
+          <li>
+            <div class="verify-step">
+              <span class="verify-step-title">Step 4.1 (Linux):</span>
+              Run this command in the terminal.
+            </div>
+            <div class="verify-code-row">
+              <pre class="verify-code"><code>bash flash.sh &lt;c code file name.c&gt;</code></pre>
+              <button id="verifyCopyLinuxCmdBtn" class="btn-secondary verify-btn" type="button">Copy</button>
+            </div>
+            <div class="verify-step">
+              <span class="verify-step-title">Step 4.2 (Windows):</span>
+              Run this command in the terminal.
+            </div>
+            <div class="verify-code-row">
+              <pre class="verify-code"><code>flash.bat &lt;c file name.c&gt;</code></pre>
+              <button id="verifyCopyWindowsCmdBtn" class="btn-secondary verify-btn" type="button">Copy</button>
+            </div>
+          </li>
+        </ol>
+        <div class="verify-note">
+          NOTE: YOU MUST ENTER THE SAVED C FILE NAME ALONG WITH EXTENSION.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="verifyCopyBtn" class="btn-secondary" type="button">Copy Steps</button>
+        <button id="verifyOkBtn" class="btn-primary" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+
   <xml id="toolboxProgram" style="display: none">
     <block type="start_block"></block>
     <block type="include_library"></block>

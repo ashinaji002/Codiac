@@ -127,6 +127,11 @@
       display: flex;
     }
 
+    .menu-item:hover > .menu-dropdown,
+    .menu-item:focus-within > .menu-dropdown {
+      display: flex;
+    }
+
     .menu-action {
       border: 0;
       background: transparent;
@@ -1092,6 +1097,76 @@
     .help-line {
       font-size: 0.95rem;
       line-height: 1.4;
+    }
+
+    .verify-modal {
+      max-width: 620px;
+    }
+
+    .verify-body {
+      gap: 14px;
+      color: #3a2d21;
+    }
+
+    .verify-steps {
+      margin: 0;
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .verify-step {
+      margin-bottom: 8px;
+    }
+
+    .verify-step-title {
+      font-weight: 700;
+      color: #5f4b39;
+      margin-right: 6px;
+    }
+
+    .verify-btn {
+      width: fit-content;
+      margin-top: 4px;
+    }
+
+    .verify-code {
+      margin: 6px 0 10px;
+      border: 1px dashed #ccb39a;
+      background: #fff7ed;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85rem;
+      color: #4a3422;
+      white-space: pre-wrap;
+    }
+
+    .verify-code-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .verify-code-row .verify-code {
+      flex: 1 1 280px;
+      margin: 6px 0;
+    }
+
+    .verify-note {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f6e9db;
+      border: 1px solid var(--line);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #5f4b39;
+      text-transform: uppercase;
     }
 
     .modal-footer {

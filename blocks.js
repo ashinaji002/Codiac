@@ -88,7 +88,16 @@ const els = {
   helpModalContainer: document.getElementById('helpModalContainer'),
   helpModalClose: document.getElementById('helpModalClose'),
   helpOkBtn: document.getElementById('helpOkBtn'),
-  helpCopyBtn: document.getElementById('helpCopyBtn')
+  helpCopyBtn: document.getElementById('helpCopyBtn'),
+  verifyModal: document.getElementById('verifyModal'),
+  verifyModalContainer: document.getElementById('verifyModalContainer'),
+  verifyModalClose: document.getElementById('verifyModalClose'),
+  verifyOkBtn: document.getElementById('verifyOkBtn'),
+  verifyCopyBtn: document.getElementById('verifyCopyBtn'),
+  verifyDownloadShBtn: document.getElementById('verifyDownloadShBtn'),
+  verifyDownloadCBtn: document.getElementById('verifyDownloadCBtn'),
+  verifyCopyLinuxCmdBtn: document.getElementById('verifyCopyLinuxCmdBtn'),
+  verifyCopyWindowsCmdBtn: document.getElementById('verifyCopyWindowsCmdBtn')
 };
 
 //Creates work Area
@@ -182,7 +191,7 @@ window.onload = function() {
   initDownloadsMenu();
   initHelpModal();
   initBlocksTabs();
-  initVerifyButton();
+  initVerifyModal();
 
 };
 
@@ -212,19 +221,104 @@ function initDownloadsMenu() {
   }
 }
 
-function initVerifyButton() {
-  if (!els.verifyBtn) {
+function initVerifyModal() {
+  if (!els.verifyBtn || !els.verifyModal || !els.verifyModalContainer) {
     return;
   }
 
-  els.verifyBtn.addEventListener('click', async function () {
-    const instructions =
-      'Open a terminal and run:\n' +
-      'cd ~/Downloads\n' +
-      'bash flash.sh ' + lastDownloadedCName;
+  function openVerify() {
+    els.verifyModal.classList.add('active');
+    els.verifyModalContainer.classList.add('active');
+  }
 
-    await copyTextToClipboard('cd ~/Downloads\n' + 'bash flash.sh ' + lastDownloadedCName);
-    alert(instructions);
+  function closeVerify() {
+    els.verifyModal.classList.remove('active');
+    els.verifyModalContainer.classList.remove('active');
+  }
+
+  els.verifyBtn.addEventListener('click', openVerify);
+
+  if (els.verifyModalClose) {
+    els.verifyModalClose.addEventListener('click', closeVerify);
+  }
+
+  if (els.verifyOkBtn) {
+    els.verifyOkBtn.addEventListener('click', closeVerify);
+  }
+
+  if (els.verifyCopyBtn) {
+    els.verifyCopyBtn.addEventListener('click', function () {
+      const steps =
+        'Step 1: Download the shell script into your project folder.\n' +
+        'Step 2: Download your generated C code to your project folder (Save As).\n' +
+        'Step 3: Open your terminal and redirect it to your project folder.\n' +
+        'Step 4.1 (Linux): bash flash.sh <c code file name.c>\n' +
+        'Step 4.2 (Windows): flash.bat <c file name.c>\n' +
+        'NOTE: YOU MUST ENTER THE SAVED C FILE NAME ALONG WITH EXTENSION.';
+      copyTextToClipboard(steps);
+    });
+  }
+
+  if (els.verifyCopyLinuxCmdBtn) {
+    els.verifyCopyLinuxCmdBtn.addEventListener('click', function () {
+      copyTextToClipboard('bash flash.sh <c code file name.c>');
+      setTempButtonLabel(els.verifyCopyLinuxCmdBtn, 'Copied!');
+    });
+  }
+
+  if (els.verifyCopyWindowsCmdBtn) {
+    els.verifyCopyWindowsCmdBtn.addEventListener('click', function () {
+      copyTextToClipboard('flash.bat <c code file name.c>');
+      setTempButtonLabel(els.verifyCopyWindowsCmdBtn, 'Copied!');
+    });
+  }
+
+  if (els.verifyDownloadShBtn) {
+    els.verifyDownloadShBtn.addEventListener('click', function () {
+      saveWithDialog(flashShScript, 'flash.sh', [
+        {
+          description: 'Shell script',
+          accept: { 'text/x-shellscript': ['.sh'] }
+        },
+        {
+          description: 'Text',
+          accept: { 'text/plain': ['.txt'] }
+        }
+      ]);
+    });
+  }
+
+  if (els.verifyDownloadCBtn) {
+    els.verifyDownloadCBtn.addEventListener('click', function () {
+      const code = String(els.output ? els.output.textContent : '').trim();
+      if (!code || code === 'Click "Generate C Code" to see output.' || code.startsWith('Error:')) {
+        alert('Generate C code first');
+        return;
+      }
+      lastDownloadedCName = 'codiac.c';
+      saveWithDialog(code, 'codiac.c', [
+        {
+          description: 'C source',
+          accept: { 'text/x-csrc': ['.c'] }
+        },
+        {
+          description: 'Text',
+          accept: { 'text/plain': ['.txt'] }
+        }
+      ]);
+    });
+  }
+
+  els.verifyModal.addEventListener('click', function (event) {
+    if (event.target === els.verifyModal) {
+      closeVerify();
+    }
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && els.verifyModal.classList.contains('active')) {
+      closeVerify();
+    }
   });
 }
 
@@ -776,6 +870,17 @@ function setCopyButtonLabel(label) {
   copyLabelTimer = setTimeout(function () {
     els.copyBtn.textContent = 'Copy Code';
     copyLabelTimer = null;
+  }, 1200);
+}
+
+function setTempButtonLabel(button, label) {
+  if (!button) {
+    return;
+  }
+  const original = button.textContent;
+  button.textContent = label;
+  setTimeout(function () {
+    button.textContent = original;
   }, 1200);
 }
 
