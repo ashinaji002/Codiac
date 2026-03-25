@@ -46,7 +46,7 @@ const els = {
 //Creates work Area
 window.onload = function() {
   workspace = Blockly.inject('blocklyDiv', {
-    toolbox: document.getElementById('toolbox')
+    toolbox: document.getElementById('toolboxProgram')
   });
   workspace.addChangeListener(function (event) {
     if (!event || event.isUiEvent) {
@@ -132,8 +132,31 @@ window.onload = function() {
   initEditMenu();
   initHelpModal();
   initToolboxResizer();
+  initBlocksTabs();
 
 };
+
+function initBlocksTabs() {
+  const tabs = document.querySelectorAll('.blocks-tab');
+  if (!tabs.length || !workspace) {
+    return;
+  }
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (item) { item.classList.remove('active'); });
+      tab.classList.add('active');
+
+      const category = tab.getAttribute('data-category');
+      const toolboxId = category ? 'toolbox' + category : '';
+      const toolbox = toolboxId ? document.getElementById(toolboxId) : null;
+      if (toolbox) {
+        workspace.updateToolbox(toolbox);
+        scheduleWorkspaceResize();
+      }
+    });
+  });
+}
 
 function initFileMenu() {
   if (!els.fileMenuBtn || !els.fileMenu) {

@@ -82,9 +82,20 @@
       <section class="editor-pane">
         <div class="editor-tabs">
         </div>
-        <div class="workspace-wrap">
-          <div id="toolboxSplitter" class="toolbox-splitter" aria-hidden="true"></div>
-          <div id="blocklyDiv"></div>
+        <div class="editor-body">
+          <nav class="blocks-vertical" aria-label="Block categories">
+            <button class="blocks-tab active" type="button" data-category="Program" data-icon="P" aria-label="Program" title="Program"></button>
+            <button class="blocks-tab" type="button" data-category="GPIO" data-icon="G" aria-label="GPIO" title="GPIO"></button>
+            <button class="blocks-tab" type="button" data-category="Control" data-icon="C" aria-label="Control" title="Control"></button>
+            <button class="blocks-tab" type="button" data-category="Logic" data-icon="L" aria-label="Logic" title="Logic"></button>
+            <button class="blocks-tab" type="button" data-category="Timing" data-icon="T" aria-label="Timing" title="Timing"></button>
+            <button class="blocks-tab" type="button" data-category="UART" data-icon="U" aria-label="UART" title="UART"></button>
+            <button class="blocks-tab" type="button" data-category="Bitwise" data-icon="B" aria-label="Bitwise" title="Bitwise"></button>
+          </nav>
+          <div class="workspace-wrap">
+            <div id="toolboxSplitter" class="toolbox-splitter" aria-hidden="true"></div>
+            <div id="blocklyDiv"></div>
+          </div>
         </div>
       </section>
 
@@ -171,6 +182,14 @@
         <div class="help-line"><strong>Microprocessor Programming IDE</strong></div>
         <div class="help-line">Version: 1.1.1</div>
         <div class="help-line">Copyright @codiac</div>
+        <div class="help-line"><strong>Icons</strong></div>
+        <div class="help-line">P = Program</div>
+        <div class="help-line">G = GPIO</div>
+        <div class="help-line">C = Control</div>
+        <div class="help-line">L = Logic</div>
+        <div class="help-line">T = Timing</div>
+        <div class="help-line">U = UART</div>
+        <div class="help-line">B = Bitwise</div>
       </div>
       <div class="modal-footer">
         <button id="helpOkBtn" class="btn-secondary" type="button">OK</button>
@@ -179,7 +198,7 @@
     </div>
   </div>
 
-  <xml id="toolbox" style="display: none">
+  <xml id="toolboxProgram" style="display: none">
     <block type="start_block"></block>
     <block type="include_library"></block>
     <block type="initialize_8052"></block>
@@ -189,6 +208,13 @@
     <block type="print_text"></block>
     <block type="text_input"></block>
   </xml>
+
+  <xml id="toolboxGPIO" style="display: none"></xml>
+  <xml id="toolboxControl" style="display: none"></xml>
+  <xml id="toolboxLogic" style="display: none"></xml>
+  <xml id="toolboxTiming" style="display: none"></xml>
+  <xml id="toolboxUART" style="display: none"></xml>
+  <xml id="toolboxBitwise" style="display: none"></xml>
 
 <script src="blocks.js"></script>
 </body>

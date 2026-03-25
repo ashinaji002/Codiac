@@ -269,6 +269,65 @@
       padding: 8px;
       border-bottom: 1px solid var(--line);
       background: #efe3d4;
+      align-items: center;
+    }
+
+    .editor-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .blocks-vertical {
+      width: 68px;
+      border-right: 1px solid var(--line);
+      background: #f6eadb;
+      padding: 10px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .blocks-tab {
+      border: 1px solid #dcc6ad;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #6f533a;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+    }
+
+    .blocks-tab::after {
+      content: attr(data-icon);
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .blocks-tab:nth-child(1) { color: #b5743e; }
+    .blocks-tab:nth-child(2) { color: #6aa86a; }
+    .blocks-tab:nth-child(3) { color: #d08c3c; }
+    .blocks-tab:nth-child(4) { color: #6b87c8; }
+    .blocks-tab:nth-child(5) { color: #8b6ac8; }
+    .blocks-tab:nth-child(6) { color: #c86a7a; }
+    .blocks-tab:nth-child(7) { color: #6bb3b8; }
+
+    .blocks-tab:hover {
+      background: #f4e3cf;
+    }
+
+    .blocks-tab.active {
+      background: #f1d7bc;
+      border-color: #cfae8b;
     }
 
     .tab {
@@ -634,6 +693,24 @@
         padding: 6px;
         gap: 6px;
         grid-template-columns: 1fr;
+      }
+
+      .editor-body {
+        flex-direction: column;
+      }
+
+      .blocks-vertical {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .blocks-tab {
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
       }
 
       .workspace-wrap {
