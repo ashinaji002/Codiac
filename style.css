@@ -109,9 +109,6 @@
       min-width: 150px;
     }
 
-    .menu-sub:hover > .menu-submenu {
-      display: flex;
-    }
 
     .menu-parent {
       width: 100%;
@@ -126,7 +123,10 @@
       display: flex;
     }
 
-    .menu-item:hover > .menu-dropdown {
+    .menu-sub:hover > .menu-submenu {
+      display: flex;
+    }
+    .menu-sub:hover > .menu-submenu {
       display: flex;
     }
 

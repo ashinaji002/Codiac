@@ -416,9 +416,26 @@ function initFileMenu() {
   if (!els.fileMenuBtn || !els.fileMenu) {
     return;
   }
+  function toggleMenu() {
+    els.fileMenu.classList.toggle('open');
+  }
+
+  function closeMenu() {
+    els.fileMenu.classList.remove('open');
+  }
 
   els.fileMenuBtn.addEventListener('click', function (event) {
-    event.preventDefault();
+    event.stopPropagation();
+    if (els.editMenu) {
+      els.editMenu.classList.remove('open');
+    }
+    toggleMenu();
+  });
+
+  document.addEventListener('click', function (event) {
+    if (!els.fileMenu.contains(event.target) && event.target !== els.fileMenuBtn) {
+      closeMenu();
+    }
   });
 
   if (els.saveCBtn) {
@@ -515,9 +532,26 @@ function initEditMenu() {
   if (!els.editMenuBtn || !els.editMenu) {
     return;
   }
+  function toggleMenu() {
+    els.editMenu.classList.toggle('open');
+  }
+
+  function closeMenu() {
+    els.editMenu.classList.remove('open');
+  }
 
   els.editMenuBtn.addEventListener('click', function (event) {
-    event.preventDefault();
+    event.stopPropagation();
+    if (els.fileMenu) {
+      els.fileMenu.classList.remove('open');
+    }
+    toggleMenu();
+  });
+
+  document.addEventListener('click', function (event) {
+    if (!els.editMenu.contains(event.target) && event.target !== els.editMenuBtn) {
+      closeMenu();
+    }
   });
 
   if (els.undoBtn) {
