@@ -139,15 +139,15 @@ window.onload = function() {
 
 function initDownloadsMenu() {
   if (els.downloadFlashSh) {
-    els.downloadFlashSh.addEventListener('click', function () {
-      downloadStaticFile('https://codiacide.vercel.app/files/flash.sh', 'flash.sh');
-    });
+    els.downloadFlashSh.onclick = function () {
+      window.location.href = 'https://codiacide.vercel.app/files/flash.sh';
+    };
   }
 
   if (els.downloadFlashBat) {
-    els.downloadFlashBat.addEventListener('click', function () {
-      downloadStaticFile('https://codiacide.vercel.app/files/Upload.bat', 'Upload.bat');
-    });
+    els.downloadFlashBat.onclick = function () {
+      window.location.href = 'https://codiacide.vercel.app/files/Upload.bat';
+    };
   }
 }
 
