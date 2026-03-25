@@ -4,6 +4,7 @@ generator.ORDER_ATOMIC = 0;
 let workspace;
 let workspaceDirty = false;
 let uploadedCFile = null;
+let lastDownloadedCName = 'codiac.c';
 const flashShScript = `#!/usr/bin/env bash
 set -e  # Exit if any command fails
 
@@ -47,10 +48,11 @@ echo "Deactivating virtual environment..."
 deactivate
 
 echo
-echo "✅ Done!"
+echo "Done!"
 `;
 const els = {
   generateBtn: document.getElementById('generateBtn'),
+  verifyBtn: document.getElementById('verifyBtn'),
   copyBtn: document.getElementById('copyBtn'),
   downloadBtn: document.getElementById('downloadBtn'),
   uploadBtn: document.getElementById('uploadBtn'),
@@ -130,6 +132,7 @@ window.onload = function() {
         alert('Enter code first');
         return;
       }
+      lastDownloadedCName = 'codiac.c';
       saveWithDialog(code, 'codiac.c', [
         {
           description: 'C source',
@@ -179,6 +182,7 @@ window.onload = function() {
   initDownloadsMenu();
   initHelpModal();
   initBlocksTabs();
+  initVerifyButton();
 
 };
 
@@ -206,6 +210,22 @@ function initDownloadsMenu() {
   if (els.downloadFlashBat) {
     els.downloadFlashBat.onclick = null;
   }
+}
+
+function initVerifyButton() {
+  if (!els.verifyBtn) {
+    return;
+  }
+
+  els.verifyBtn.addEventListener('click', async function () {
+    const instructions =
+      'Open a terminal and run:\n' +
+      'cd ~/Downloads\n' +
+      'bash flash.sh ' + lastDownloadedCName;
+
+    await copyTextToClipboard('cd ~/Downloads\n' + 'bash flash.sh ' + lastDownloadedCName);
+    alert(instructions);
+  });
 }
 
 function initBlocksTabs() {
